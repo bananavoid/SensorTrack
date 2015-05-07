@@ -3,6 +3,7 @@ package com.asx.sensortrack;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.util.Log;
 
 import com.orm.SugarApp;
 import com.orm.SugarRecord;
@@ -25,6 +26,9 @@ public class SensorTrackApp extends SugarApp {
         for (Sensor sensor : deviceSensors) {
             SensorEntry entry = new SensorEntry(sensor.getName());
             entry.save();
+
+            long new_count = SensorEntry.count(SensorEntry.class, null, null);
+            Log.d("DB_COUNT", "Real count: " + new_count);
         }
     }
 }

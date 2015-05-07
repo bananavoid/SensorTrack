@@ -19,7 +19,7 @@
             android:padding="10dp"/>
 
         <ListView
-            android:id="@+id/sensorsList"
+            android:id="@+id/sensorsListSampling"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:dividerHeight="0dp"
@@ -28,7 +28,7 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/nextBtn"
+        android:id="@+id/nextSamplingBtn"
         android:text="@string/next"
         android:padding="10dp"
         android:layout_width="0dp"

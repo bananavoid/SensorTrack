@@ -1,13 +1,5 @@
 package com.asx.sensortrack;
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.util.AttributeSet;
-import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.FrameLayout;
-import android.widget.TextView;
-
 import com.orm.SugarRecord;
 
 
@@ -16,8 +8,9 @@ import com.orm.SugarRecord;
  */
 public class SensorEntry extends SugarRecord<SensorEntry> {
     String name;
-    boolean isPlotting;
-    boolean isSaving;
+    float rate;
+    String plotting;
+    String saving;
 
     public SensorEntry(){
         //don't remove - orm requires
@@ -25,8 +18,17 @@ public class SensorEntry extends SugarRecord<SensorEntry> {
 
     public SensorEntry(String name) {
         setName(name);
-        setIsPlotting(false);
-        setIsSaving(false);
+        setIsPlotting("false");
+        setIsSaving("false");
+        setRate(0);
+    }
+
+    public float getRate() {
+        return rate;
+    }
+
+    public void setRate(float rate) {
+        this.rate = rate;
     }
 
     public String getName() {
@@ -37,19 +39,24 @@ public class SensorEntry extends SugarRecord<SensorEntry> {
         this.name = name;
     }
 
-    public boolean isPlotting() {
-        return isPlotting;
+    public String getIsPlotting() {
+        return plotting;
     }
 
-    public void setIsPlotting(boolean isPlotting) {
-        this.isPlotting = isPlotting;
+    public void setIsPlotting(String isPlotting) {
+        this.plotting = isPlotting;
     }
 
-    public boolean isSaving() {
-        return isSaving;
+    public String getIsSaving() {
+        return saving;
     }
 
-    public void setIsSaving(boolean isSaving) {
-        this.isSaving = isSaving;
+    public void setIsSaving(String isSaving) {
+        this.saving = isSaving;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 }
