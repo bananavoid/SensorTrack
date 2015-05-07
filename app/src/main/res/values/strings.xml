@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">SensorTrack</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="available_sensors">Available sensors</string>
+    <string name="next">Next</string>
+    <string name="name">Name</string>
+    <string name="plot">Plot</string>
+    <string name="save">Save</string>
+</resources>
