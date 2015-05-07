@@ -7,8 +7,6 @@ import android.util.Log;
 
 import com.orm.SugarApp;
 import com.orm.SugarRecord;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class SensorTrackApp extends SugarApp {
@@ -24,7 +22,7 @@ public class SensorTrackApp extends SugarApp {
         List<Sensor> deviceSensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
         for (Sensor sensor : deviceSensors) {
-            SensorEntry entry = new SensorEntry(sensor.getName());
+            SensorEntry entry = new SensorEntry(sensor.getName(), sensor.getType());
             entry.save();
 
             long new_count = SensorEntry.count(SensorEntry.class, null, null);

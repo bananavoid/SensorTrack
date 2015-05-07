@@ -8,6 +8,7 @@ import com.orm.SugarRecord;
  */
 public class SensorEntry extends SugarRecord<SensorEntry> {
     String name;
+    int type;
     float rate;
     String plotting;
     String saving;
@@ -16,8 +17,9 @@ public class SensorEntry extends SugarRecord<SensorEntry> {
         //don't remove - orm requires
     }
 
-    public SensorEntry(String name) {
+    public SensorEntry(String name, int type) {
         setName(name);
+        setType(type);
         setIsPlotting("false");
         setIsSaving("false");
         setRate(0);
@@ -55,8 +57,11 @@ public class SensorEntry extends SugarRecord<SensorEntry> {
         this.saving = isSaving;
     }
 
-    @Override
-    public String toString() {
-        return super.toString();
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 }

@@ -29,12 +29,12 @@
 
     <Button
         android:id="@+id/nextSamplingBtn"
-        android:text="@string/next"
+        android:text="@string/run"
         android:padding="10dp"
         android:layout_width="0dp"
         android:layout_weight="2"
         android:layout_height="60dp"
         android:layout_gravity="center_vertical"
-        android:onClick="doNext"/>
+        android:onClick="doRun"/>
 
 </LinearLayout>

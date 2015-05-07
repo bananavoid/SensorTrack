@@ -11,12 +11,13 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
-public class FullSensorsCursorAtapter extends CursorAdapter {
-    private static final String TAG = FullSensorsCursorAtapter.class.getSimpleName();
-    Context mContext;
-    boolean[] mCheckBoxState = new boolean[2];
+import com.asx.sensortrack.database.DbUtils;
 
-    public FullSensorsCursorAtapter(Context context, Cursor c) {
+public class FullSensorsCursorAdapter extends CursorAdapter {
+    private static final String TAG = FullSensorsCursorAdapter.class.getSimpleName();
+    Context mContext;
+
+    public FullSensorsCursorAdapter(Context context, Cursor c) {
         super(context, c, false);
         this.mContext = context;
     }
@@ -61,7 +62,7 @@ public class FullSensorsCursorAtapter extends CursorAdapter {
         View rootView = view;
 
         final int position =(Integer) view.getTag();
-        final SensorEntry entry = DbUtils.getSensorById(position);
+        final SensorEntry entry = DbUtils.getSensorById(getItemId(position));
 
         holder = new SensorItemHolder();
         holder.name = (TextView)rootView.findViewById(R.id.sensorName);
@@ -70,26 +71,34 @@ public class FullSensorsCursorAtapter extends CursorAdapter {
 
         holder.name.setText(cursor.getString(cursor.getColumnIndexOrThrow("name")));
 
+        Log.d(TAG, "NAME: " + cursor.getString(cursor.getColumnIndexOrThrow("name")));
+        Log.d(TAG, "TYPE: " + cursor.getString(cursor.getColumnIndexOrThrow("type")));
+
+
         holder.plotCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             }
         });
 
-        holder.saveCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        if (entry.saving.equals("true")) {
+            holder.saveCB.setChecked(true);
+        } else {
+            holder.saveCB.setChecked(false);
+        }
+
+        holder.saveCB.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d("DB_UTIL", "Cursor position: " + cursor.getPosition());
-                Log.d("DB_UTIL", "position: " + position);
-
-                Log.d("DB_UTIL", "Entry id: " + getItemId(position));
-
-                SensorEntry entry = DbUtils.getSensorById(getItemId(position));
-                entry.setIsSaving(String.valueOf(isChecked));
-                entry.save();
-
-                Log.d("DB_UTIL", "Is it for save?: " + entry.getIsSaving());
-
+            public void onClick(View v) {
+                if (((CheckBox) v).isChecked()) {
+                    entry.saving = "true";
+                    entry.setIsSaving("true");
+                    entry.save();
+                } else {
+                    entry.saving = "false";
+                    entry.setIsSaving("false");
+                    entry.save();
+                }
             }
         });
     }

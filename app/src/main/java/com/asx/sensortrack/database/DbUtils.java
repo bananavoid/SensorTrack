@@ -1,7 +1,8 @@
-package com.asx.sensortrack;
+package com.asx.sensortrack.database;
 
 import android.database.MatrixCursor;
 
+import com.asx.sensortrack.SensorEntry;
 import com.orm.query.Condition;
 import com.orm.query.Select;
 
@@ -14,6 +15,7 @@ public final class DbUtils {
         String[] c_columns = new String[] {
                 "_id",
                 "name",
+                "type",
                 "rate",
                 "plotting",
                 "saving"
@@ -23,6 +25,7 @@ public final class DbUtils {
             matrixCursor.addRow(new Object[]{
                     sensor.getId().toString(),
                     sensor.getName(),
+                    sensor.getType(),
                     sensor.getRate(),
                     sensor.getIsPlotting(),
                     sensor.getIsSaving()
@@ -37,6 +40,7 @@ public final class DbUtils {
         String[] c_columns = new String[] {
                 "_id",
                 "name",
+                "type",
                 "rate",
                 "plotting",
                 "saving"
@@ -46,6 +50,7 @@ public final class DbUtils {
             matrixCursor.addRow(new Object[]{
                     sensor.getId().toString(),
                     sensor.getName(),
+                    sensor.getType(),
                     sensor.getRate(),
                     sensor.getIsPlotting(),
                     sensor.getIsSaving()

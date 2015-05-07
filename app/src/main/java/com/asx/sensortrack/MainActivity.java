@@ -7,7 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ListView;
 
-import java.util.List;
+import com.asx.sensortrack.database.DbUtils;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -26,7 +26,7 @@ public class MainActivity extends ActionBarActivity {
 
         list.addHeaderView(header);
         //mSensorsList.setAdapter(new SensorsListArrayAdapter(this, sensors));
-        list.setAdapter(new FullSensorsCursorAtapter(
+        list.setAdapter(new FullSensorsCursorAdapter(
                 this,
                 DbUtils.getSensorsFullCursor()));
     }
