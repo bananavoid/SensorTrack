@@ -8,14 +8,20 @@ import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.orm.SugarRecord;
+
 
 /**
  * Model for sensors List
  */
-public class SensorEntry {
+public class SensorEntry extends SugarRecord<SensorEntry> {
     String name;
     boolean isPlotting;
     boolean isSaving;
+
+    public SensorEntry(){
+        //don't remove - orm requires
+    }
 
     public SensorEntry(String name) {
         setName(name);

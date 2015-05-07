@@ -1,6 +1,7 @@
 package com.asx.sensortrack;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.support.v7.app.ActionBarActivity;
@@ -27,12 +28,7 @@ public class MainActivity extends ActionBarActivity {
         mSensorsList = (ListView) findViewById(R.id.sensorsList);
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
-        ArrayList<SensorEntry> sensors = new ArrayList<>();
-        List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-
-        for (Sensor sensor : deviceSensors) {
-            sensors.add(new SensorEntry(sensor.getName()));
-        }
+        List<SensorEntry> sensors = SensorEntry.listAll(SensorEntry.class);
 
         LayoutInflater headerInflater = this.getLayoutInflater();
         View header = headerInflater.inflate(R.layout.sensors_list_header, null);
@@ -42,6 +38,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void doNext(View view) {
-
+        Intent intent = new Intent(this, SamplingRateActivity.class);
+        startActivity(intent);
     }
 }
