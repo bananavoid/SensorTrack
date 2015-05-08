@@ -33,7 +33,7 @@ public class SamplingRateActivity extends ActionBarActivity {
 
         mList.setAdapter(new SelectedSensorsCursorAdapter(
                 this,
-                DbUtils.getSensorsSelectedCursor()));
+                DbUtils.getSelectedSensorsCursor()));
     }
 
     @Override

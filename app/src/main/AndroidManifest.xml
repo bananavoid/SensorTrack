@@ -22,7 +22,8 @@
         </activity>
         <activity
             android:name=".SamplingRateActivity"
-            android:label="@string/title_activity_sampling_rate" >
+            android:label="@string/title_activity_sampling_rate"
+            android:screenOrientation="userPortrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
@@ -30,7 +31,8 @@
 
         <activity
             android:name=".PlotsActivity"
-            android:label="@string/title_activity_plots" >
+            android:label="@string/title_activity_plots"
+            android:screenOrientation="userPortrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".SamplingRateActivity" />

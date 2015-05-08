@@ -16,6 +16,10 @@ import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ListView;
 
+import com.asx.sensortrack.database.DbUtils;
+
+import java.util.List;
+
 
 public class PlotsActivity extends ActionBarActivity {
 
@@ -46,10 +50,17 @@ public class PlotsActivity extends ActionBarActivity {
         GridView grid = (GridView) findViewById(R.id.gridPad);
         ListView list = (ListView) findViewById(R.id.listPlots);
 
+        List<SensorEntry> toPlottingEntries = DbUtils.getSensorsPlotting();
+        String[] names = new String[toPlottingEntries.size()];
+
+        for(int i = 0; i< toPlottingEntries.size(); ++i) {
+            names[i] = toPlottingEntries.get(i).getName();
+        }
+
         list.setAdapter(new ArrayAdapter<String>(
                 this,
                 R.layout.test,
-                mPads
+                names
         ));
 
         grid.setAdapter(new CustomGridAdapter());

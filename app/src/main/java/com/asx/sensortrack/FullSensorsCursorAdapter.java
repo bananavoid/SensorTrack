@@ -74,11 +74,8 @@ public class FullSensorsCursorAdapter extends CursorAdapter {
 //            }
 //        });
 
-        if (entry.saving.equals("true")) {
-            holder.saveCB.setChecked(true);
-        } else {
-            holder.saveCB.setChecked(false);
-        }
+        holder.plotCB.setChecked(entry.plotting.equals("true"));
+        holder.saveCB.setChecked(entry.saving.equals("true"));
 
         holder.saveCB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,6 +87,21 @@ public class FullSensorsCursorAdapter extends CursorAdapter {
                 } else {
                     entry.saving = "false";
                     entry.setIsSaving("false");
+                    entry.save();
+                }
+            }
+        });
+
+        holder.plotCB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((CheckBox) v).isChecked()) {
+                    entry.plotting = "true";
+                    entry.setIsPlotting("true");
+                    entry.save();
+                } else {
+                    entry.plotting = "false";
+                    entry.setIsPlotting("false");
                     entry.save();
                 }
             }

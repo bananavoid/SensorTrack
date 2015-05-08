@@ -21,7 +21,7 @@ import java.util.HashMap;
 public class SelectedSensorsCursorAdapter extends CursorAdapter {
     private final Cursor mCursor;
     private Context mContext;
-    private int mRowIdColumn;
+//    private int mRowIdColumn;
     private LayoutInflater mInflater;
     //private HashMap<Integer, String> textValues = new HashMap<Integer, String>();
 
@@ -30,8 +30,8 @@ public class SelectedSensorsCursorAdapter extends CursorAdapter {
         this.mContext = context;
         this.mCursor = c;
 
-        boolean cursorPresent = c != null;
-        mRowIdColumn = cursorPresent ? this.mCursor.getColumnIndexOrThrow("_id") : -1;
+        //boolean cursorPresent = c != null;
+        //mRowIdColumn = cursorPresent ? this.mCursor.getColumnIndexOrThrow("_id") : -1;
         this.mInflater = (LayoutInflater) this.mContext.getSystemService(this.mContext.LAYOUT_INFLATER_SERVICE);
     }
 
