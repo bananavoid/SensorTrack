@@ -9,18 +9,18 @@
         android:text="@string/name"
         android:layout_width="0dp"
         android:layout_weight="8"
-        android:layout_height="wrap_content" />
+        style="@style/ListHeaderStyle" />
 
     <TextView
         android:text="@string/plot"
         android:layout_width="0dp"
         android:layout_weight="1"
-        android:layout_height="wrap_content" />
+        style="@style/ListHeaderStyle"/>
 
     <TextView
         android:text="@string/save"
         android:layout_width="0dp"
         android:layout_weight="1"
-        android:layout_height="wrap_content" />
+        style="@style/ListHeaderStyle"/>
 
 </LinearLayout>

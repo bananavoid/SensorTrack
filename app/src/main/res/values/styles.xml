@@ -4,6 +4,19 @@
     <style name="AppTheme" parent="Base.Theme.AppCompat.Light.DarkActionBar" >        <!-- Customize your theme here. -->
     </style>
 
+    <style name="HeaderStyle" parent="@android:style/TextAppearance.Medium">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">16dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:padding">10dp</item>
+    </style>
+
+    <style name="ListHeaderStyle" parent="@android:style/TextAppearance.Medium">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14dp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 
 
 </resources>

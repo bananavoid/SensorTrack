@@ -6,15 +6,15 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
+        android:name=".SensorTrackApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme"
-        android:name=".SensorTrackApp">
+        android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:screenOrientation="userLandscape" >
+            android:screenOrientation="userPortrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -26,7 +26,9 @@
             android:label="@string/title_activity_sampling_rate" >
         </activity>
 
-        <service android:enabled="true" android:name=".TrackSensorsService" />
+        <service
+            android:name=".TrackSensorsService"
+            android:enabled="true" />
 
         <meta-data
             android:name="DATABASE"
@@ -41,6 +43,10 @@
             android:name="DOMAIN_PACKAGE_NAME"
             android:value="com.asx.sensortrack" />
 
+        <activity
+            android:name=".PlotsActivity"
+            android:label="@string/title_activity_plots" >
+        </activity>
     </application>
 
 </manifest>

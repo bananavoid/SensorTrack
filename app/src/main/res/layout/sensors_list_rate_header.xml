@@ -9,13 +9,12 @@
         android:text="@string/name"
         android:layout_width="0dp"
         android:layout_weight="8"
-        android:layout_height="wrap_content" />
+        style="@style/ListHeaderStyle" />
 
     <TextView
         android:text="@string/sampling_rate"
         android:layout_width="0dp"
         android:layout_weight="2"
-        android:layout_height="wrap_content"
-        android:onClick="doRun"/>
+        style="@style/ListHeaderStyle"/>
 
 </LinearLayout>

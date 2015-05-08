@@ -7,6 +7,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.hardware.TriggerEvent;
+import android.hardware.TriggerEventListener;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
@@ -21,23 +23,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static android.os.Environment.DIRECTORY_DOCUMENTS;
 
 
 public class TrackSensorsService extends Service {
 
     private SensorManager mSensorManager;
-    private Context mContext;
 
     private HashMap<Integer, CSVWriter> mWriter = new HashMap<>();
-    private HashMap<Integer, File> mFileToRecord = new HashMap<>();
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
-
-    String axisX;
-    String axisY;
-    String axisZ;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -60,7 +53,16 @@ public class TrackSensorsService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (intent.getExtras()!= null) {
+            String value = intent.getStringExtra("INPUT_DATA");
+            for (int i = 0; i < mWriter.size(); ++i) {
+                mWriter.get(mCurrentSensorsTypes.get(i)).writeNext(new String[]{value}, false);
+            }
+        }
+
         setUpSensors();
+
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -82,21 +84,33 @@ public class TrackSensorsService extends Service {
             mSensorManager.unregisterListener(mListener);
         }
 
+        if (mTriggerListener != null && mSensorManager != null) {
+            Sensor sigMotion = mSensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+            mSensorManager.cancelTriggerSensor(mTriggerListener, sigMotion);
+        }
+
         Toast.makeText(this, getResources().getString(R.string.service_stopped), Toast.LENGTH_LONG).show();
     }
+
+    private final TriggerEventListener mTriggerListener = new TriggerEventListener() {
+        @Override
+        public void onTrigger(TriggerEvent event) {
+            int type = event.sensor.getType();
+
+            String[] values = new String[event.values.length];
+
+            for(int i = 0; i < event.values.length; ++i) {
+                values[i] = Float.toString(event.values[i]);
+            }
+
+            mWriter.get(type).writeNext(values, false);
+        }
+    };
 
     private final SensorEventListener mListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-
-            int type = event.sensor.getType();
-
-            axisX = Float.toString(event.values[0]);
-            axisY = Float.toString(event.values[1]);
-            axisZ = Float.toString(event.values[2]);
-
-            mWriter.get(type).writeNext(new String[]{axisX, axisY, axisZ}, false);
-
+            handleSensorEvent(event);
 //            Double magnitude = Math.sqrt((Math.pow(Double.parseDouble(axisX), 2)) +
 //                    (Math.pow(Double.parseDouble(axisY), 2)) +
 //                    (Math.pow(Double.parseDouble(axisZ), 2)));
@@ -113,7 +127,11 @@ public class TrackSensorsService extends Service {
 
         for (Integer type : mCurrentSensorsTypes) {
             Sensor sensor = mSensorManager.getDefaultSensor(type);
-            mSensorManager.registerListener(mListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+            if (type != 17) {
+                mSensorManager.registerListener(mListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+            } else {
+                mSensorManager.requestTriggerSensor(mTriggerListener, sensor);
+            }
         }
     }
 
@@ -121,29 +139,39 @@ public class TrackSensorsService extends Service {
         File fileDir = (Environment.getExternalStorageDirectory());
 
         File templatesDirectory= new File(fileDir + "/SensorsData");
-        if (templatesDirectory.exists()) {
-            File[] files = templatesDirectory.listFiles();
-            for (int i = 0; i < files.length; ++i) {
-                files[i].delete();
-            }
+        if (!templatesDirectory.exists()) {
+            templatesDirectory.mkdirs();
         }
 
-        templatesDirectory.mkdirs();
-
         File file = new File(templatesDirectory, name + ".csv");
+        if (file.exists()) {
+            file.delete();
+        }
         try {
             file.createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        mFileToRecord.put(type, file);
-
         try {
             CSVWriter writer = new CSVWriter(new FileWriter(file, true));
             mWriter.put(type, writer);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void handleSensorEvent(SensorEvent event) {
+        if (event.values.length != 0) {
+            int type = event.sensor.getType();
+
+            String[] values = new String[event.values.length];
+
+            for(int i = 0; i < event.values.length; ++i) {
+                values[i] = Float.toString(event.values[i]);
+            }
+
+            mWriter.get(type).writeNext(values, false);
         }
     }
 }

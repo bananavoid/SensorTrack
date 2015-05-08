@@ -7,16 +7,13 @@
     tools:context=".MainActivity">
 
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_weight="8"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <TextView
-            android:text="@string/available_sensors"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="10dp"/>
+            android:text="@string/selected_sensors"
+            style="@style/HeaderStyle"/>
 
         <ListView
             android:id="@+id/sensorsListSampling"
@@ -27,14 +24,14 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/nextSamplingBtn"
-        android:text="@string/run"
-        android:padding="10dp"
-        android:layout_width="0dp"
-        android:layout_weight="2"
-        android:layout_height="60dp"
-        android:layout_gravity="center_vertical"
-        android:onClick="doRun"/>
+    <!--<Button-->
+        <!--android:id="@+id/nextSamplingBtn"-->
+        <!--android:text="@string/next"-->
+        <!--android:padding="10dp"-->
+        <!--android:layout_width="0dp"-->
+        <!--android:layout_weight="2"-->
+        <!--android:layout_height="60dp"-->
+        <!--android:layout_gravity="center_vertical"-->
+        <!--android:onClick="doRun"/>-->
 
 </LinearLayout>

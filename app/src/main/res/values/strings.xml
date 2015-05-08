@@ -13,4 +13,6 @@
     <string name="run">Run</string>
     <string name="service_started">Sensor\'s tracking started</string>
     <string name="service_stopped">Sensors tracking stopped</string>
+    <string name="title_activity_plots">PlotsActivity</string>
+    <string name="selected_sensors">Selected sensors</string>
 </resources>
