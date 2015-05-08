@@ -17,13 +17,23 @@
             android:screenOrientation="userPortrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".SamplingRateActivity"
             android:label="@string/title_activity_sampling_rate" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <activity
+            android:name=".PlotsActivity"
+            android:label="@string/title_activity_plots" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".SamplingRateActivity" />
         </activity>
 
         <service
@@ -42,11 +52,6 @@
         <meta-data
             android:name="DOMAIN_PACKAGE_NAME"
             android:value="com.asx.sensortrack" />
-
-        <activity
-            android:name=".PlotsActivity"
-            android:label="@string/title_activity_plots" >
-        </activity>
     </application>
 
 </manifest>

@@ -16,16 +16,13 @@ import com.asx.sensortrack.database.DbUtils;
 public class FullSensorsCursorAdapter extends CursorAdapter {
     private static final String TAG = FullSensorsCursorAdapter.class.getSimpleName();
     Context mContext;
+    //Cursor mCursor;
 
     public FullSensorsCursorAdapter(Context context, Cursor c) {
         super(context, c, false);
         this.mContext = context;
     }
 
-    @Override
-    public int getCount() {
-        return (int)SensorEntry.count(SensorEntry.class, null, null);
-    }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
@@ -70,16 +67,12 @@ public class FullSensorsCursorAdapter extends CursorAdapter {
         holder.saveCB = (CheckBox)rootView.findViewById(R.id.saveCheckBox);
 
         holder.name.setText(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-
-        Log.d(TAG, "NAME: " + cursor.getString(cursor.getColumnIndexOrThrow("name")));
-        Log.d(TAG, "TYPE: " + cursor.getString(cursor.getColumnIndexOrThrow("type")));
-
-
-        holder.plotCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            }
-        });
+//
+//        holder.plotCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//            }
+//        });
 
         if (entry.saving.equals("true")) {
             holder.saveCB.setChecked(true);

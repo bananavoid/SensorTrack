@@ -14,22 +14,24 @@ import com.asx.sensortrack.database.DbUtils;
 
 
 public class SamplingRateActivity extends ActionBarActivity {
+    ListView mList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sampling_rate);
 
-        getSupportActionBar().setTitle("Choose sampling rate in milliseconds");
+        getSupportActionBar().setTitle("Choose sampling rate");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        ListView list = (ListView) findViewById(R.id.sensorsListSampling);
+        mList = (ListView) findViewById(R.id.sensorsListSampling);
 
         LayoutInflater headerInflater = this.getLayoutInflater();
         View header = headerInflater.inflate(R.layout.sensors_list_rate_header, null);
 
-        list.addHeaderView(header);
+        mList.addHeaderView(header);
 
-        list.setAdapter(new SelectedSensorsCursorAdapter(
+        mList.setAdapter(new SelectedSensorsCursorAdapter(
                 this,
                 DbUtils.getSensorsSelectedCursor()));
     }
@@ -60,6 +62,12 @@ public class SamplingRateActivity extends ActionBarActivity {
     }
 
     public void doNext() {
+//        for (int i = 0; i <mList.getCount(); ++i) {
+//            long id = mList.getAdapter().getItemId(i);
+//            float rate = mList.getAdapter()
+//            SensorEntry entry = DbUtils.getSensorById(id);
+//        }
+
         Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
         startService(intent);
 

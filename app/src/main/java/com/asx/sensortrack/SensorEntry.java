@@ -9,7 +9,7 @@ import com.orm.SugarRecord;
 public class SensorEntry extends SugarRecord<SensorEntry> {
     String name;
     int type;
-    float rate;
+    int rate;
     String plotting;
     String saving;
 
@@ -25,11 +25,11 @@ public class SensorEntry extends SugarRecord<SensorEntry> {
         setRate(0);
     }
 
-    public float getRate() {
+    public int getRate() {
         return rate;
     }
 
-    public void setRate(float rate) {
+    public void setRate(int rate) {
         this.rate = rate;
     }
 

@@ -36,7 +36,7 @@ public final class DbUtils {
     }
 
     public static MatrixCursor getSensorsSelectedCursor() {
-        List<SensorEntry> sensors = getSensorsSaving(); //use for get sorted articles
+        List<SensorEntry> sensors = getSensorsSaving(); //use for get sensors for saving
         String[] c_columns = new String[] {
                 "_id",
                 "name",

@@ -30,6 +30,7 @@ public class TrackSensorsService extends Service {
     private SensorManager mSensorManager;
 
     private HashMap<Integer, CSVWriter> mWriter = new HashMap<>();
+    private HashMap<Integer, Integer> mRates = new HashMap<>();
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
 
     @Override
@@ -46,6 +47,8 @@ public class TrackSensorsService extends Service {
         for (SensorEntry entry : sensorsList) {
             prepareFile(entry.getName(), entry.getType());
             mCurrentSensorsTypes.add(entry.getType());
+            int entryRate = entry.getRate() == 0 ? SensorManager.SENSOR_DELAY_NORMAL : entry.getRate();
+            mRates.put(entry.getType(), entryRate);
         }
 
         Toast.makeText(this, getResources().getString(R.string.service_started), Toast.LENGTH_LONG).show();
@@ -128,7 +131,7 @@ public class TrackSensorsService extends Service {
         for (Integer type : mCurrentSensorsTypes) {
             Sensor sensor = mSensorManager.getDefaultSensor(type);
             if (type != 17) {
-                mSensorManager.registerListener(mListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+                mSensorManager.registerListener(mListener, sensor, mRates.get(type));
             } else {
                 mSensorManager.requestTriggerSensor(mTriggerListener, sensor);
             }

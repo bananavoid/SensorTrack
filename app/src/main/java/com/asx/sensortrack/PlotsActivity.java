@@ -39,6 +39,10 @@ public class PlotsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plots);
 
+        getSupportActionBar().setTitle("Plotting selected sensors");
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         GridView grid = (GridView) findViewById(R.id.gridPad);
         ListView list = (ListView) findViewById(R.id.listPlots);
 
