@@ -11,7 +11,6 @@ import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
 import android.os.Environment;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.asx.sensortrack.database.DbUtils;
@@ -36,9 +35,10 @@ public class TrackSensorsService extends Service {
     private HashMap<Integer, CSVWriter> mWriter = new HashMap<>();
     private HashMap<Integer, File> mFiles = new HashMap<>();
     private HashMap<Integer, Integer> mRates = new HashMap<>();
-    private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
+    private HashMap<Integer, String> mCurrentBtnIds = new HashMap<>();
+    private HashMap<Integer, Boolean> mIsHeaderAdded = new HashMap<>();
 
-    private boolean isHeaderAdded = false;
+    private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -56,6 +56,8 @@ public class TrackSensorsService extends Service {
             mCurrentSensorsTypes.add(entry.getType());
             int entryRate = entry.getRate() == 0 ? SensorManager.SENSOR_DELAY_NORMAL : entry.getRate();
             mRates.put(entry.getType(), entryRate);
+            mCurrentBtnIds.put(entry.getType(), "null");
+            mIsHeaderAdded.put(entry.getType(), false);
         }
 
         Toast.makeText(this, getResources().getString(R.string.service_started), Toast.LENGTH_LONG).show();
@@ -66,12 +68,15 @@ public class TrackSensorsService extends Service {
 
         if (intent.getExtras()!= null) {
             String value = intent.getStringExtra("INPUT_DATA");
-            for (int i = 0; i < mWriter.size(); ++i) {
-                mWriter.get(mCurrentSensorsTypes.get(i)).writeNext(new String[]{value}, false);
+
+            for (int i = 0; i < mCurrentBtnIds.size() ;++i) {
+                mCurrentBtnIds.put(mCurrentSensorsTypes.get(i), value);
             }
         }
 
-        setUpSensors();
+        if (mSensorManager == null) {
+            setUpSensors();
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -176,7 +181,7 @@ public class TrackSensorsService extends Service {
 
             String[] values = new String[event.values.length + 2];
 
-            if (mFiles.get(type).length() == 0 && !isHeaderAdded) {
+            if (mFiles.get(type).length() == 0 && !mIsHeaderAdded.get(type)) {
                 String[] headerValues = new String[event.values.length + 2];
                 for(int i = 0; i < event.values.length + 2; ++i) {
                     if (i == 0) {
@@ -189,11 +194,13 @@ public class TrackSensorsService extends Service {
                 }
 
                 mWriter.get(type).writeNext(headerValues);
-                isHeaderAdded = true;
+                mIsHeaderAdded.put(type, true);
             } else {
                 for(int i = 0; i < event.values.length + 2; ++i) {
                     if (i == event.values.length + 1) {
-                        values[i] = "Nold";
+                        String bi = mCurrentBtnIds.get(type);
+                        values[i] = bi;
+                        mCurrentBtnIds.put(type, "null");
                     } else if (i == 0) {
                         values[i] = String.valueOf(event.timestamp);
                     } else {
