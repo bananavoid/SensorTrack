@@ -9,6 +9,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.asx.sensortrack.database.DbUtils;
 
@@ -62,17 +63,15 @@ public class SamplingRateActivity extends ActionBarActivity {
     }
 
     public void doNext() {
-//        for (int i = 0; i <mList.getCount(); ++i) {
-//            long id = mList.getAdapter().getItemId(i);
-//            float rate = mList.getAdapter()
-//            SensorEntry entry = DbUtils.getSensorById(id);
-//        }
+        if (mList.getCount() > 1 ) {
+            Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
+            startService(intent);
 
-        Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
-        startService(intent);
-
-        Intent nextActivity = new Intent(this, PlotsActivity.class);
-        startActivity(nextActivity);
+            Intent nextActivity = new Intent(this, PlotsActivity.class);
+            startActivity(nextActivity);
+        } else {
+            Toast.makeText(this, "Sorry, no sensors to track", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

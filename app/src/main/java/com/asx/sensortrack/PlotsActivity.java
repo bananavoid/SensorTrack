@@ -6,6 +6,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,10 +49,10 @@ public class PlotsActivity extends ActionBarActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         GridView grid = (GridView) findViewById(R.id.gridPad);
-        ListView list = (ListView) findViewById(R.id.listPlots);
+        final ListView list = (ListView) findViewById(R.id.listPlots);
 
-        List<SensorEntry> toPlottingEntries = DbUtils.getSensorsPlotting();
-        String[] names = new String[toPlottingEntries.size()];
+        final List<SensorEntry> toPlottingEntries = DbUtils.getSensorsPlotting();
+        final String[] names = new String[toPlottingEntries.size()];
 
         for(int i = 0; i< toPlottingEntries.size(); ++i) {
             names[i] = toPlottingEntries.get(i).getName();
@@ -72,25 +73,42 @@ public class PlotsActivity extends ActionBarActivity {
                 Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
                 intent.putExtra("INPUT_DATA", mPads[position]);
                 startService(intent);
+
+                for(int i = 0; i< names.length; ++i) {
+                    names[i] = toPlottingEntries.get(i).getName() + "   " + mPads[position];
+                }
+
+                list.setAdapter(new ArrayAdapter<String>(
+                        getBaseContext(),
+                        R.layout.test,
+                        names
+                ));
             }
         });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        return true;
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_plots, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+            case R.id.action_stop:
+                stopTracking();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Intent intent = new Intent(this, TrackSensorsService.class);
-        stopService(intent);
+        stopTracking();
     }
 
     public class CustomGridAdapter extends BaseAdapter {
@@ -127,5 +145,10 @@ public class PlotsActivity extends ActionBarActivity {
 
             return convertView;
         }
+    }
+
+    public void stopTracking() {
+        Intent intent = new Intent(this, TrackSensorsService.class);
+        stopService(intent);
     }
 }
