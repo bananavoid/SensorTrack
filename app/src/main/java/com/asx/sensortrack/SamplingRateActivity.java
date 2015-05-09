@@ -58,8 +58,7 @@ public class SamplingRateActivity extends ActionBarActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Intent intent = new Intent(this, TrackSensorsService.class);
-        stopService(intent);
+        cleanAll();
     }
 
     public void doNext() {
@@ -77,7 +76,12 @@ public class SamplingRateActivity extends ActionBarActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        cleanAll();
+    }
+
+    public void cleanAll() {
         Intent intent = new Intent(this, TrackSensorsService.class);
         stopService(intent);
+        finish();
     }
 }

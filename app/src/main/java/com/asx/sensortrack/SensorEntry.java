@@ -4,7 +4,7 @@ import com.orm.SugarRecord;
 
 
 /**
- * Model for sensors List
+ * Model for sensor
  */
 public class SensorEntry extends SugarRecord<SensorEntry> {
     String name;
@@ -22,7 +22,7 @@ public class SensorEntry extends SugarRecord<SensorEntry> {
         setType(type);
         setIsPlotting("false");
         setIsSaving("false");
-        setRate(0);
+        setRate(200);
     }
 
     public int getRate() {

@@ -17,9 +17,13 @@ import android.widget.Toast;
 import com.asx.sensortrack.database.DbUtils;
 import com.opencsv.CSVWriter;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +34,11 @@ public class TrackSensorsService extends Service {
     private SensorManager mSensorManager;
 
     private HashMap<Integer, CSVWriter> mWriter = new HashMap<>();
+    private HashMap<Integer, File> mFiles = new HashMap<>();
     private HashMap<Integer, Integer> mRates = new HashMap<>();
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
+
+    private boolean isHeaderAdded = false;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -146,10 +153,9 @@ public class TrackSensorsService extends Service {
             templatesDirectory.mkdirs();
         }
 
-        File file = new File(templatesDirectory, name + ".csv");
-        if (file.exists()) {
-            file.delete();
-        }
+        File file = new File(templatesDirectory, name + getCurrentTimestamp() + ".csv");
+        mFiles.put(type, file);
+
         try {
             file.createNewFile();
         } catch (IOException e) {
@@ -168,13 +174,43 @@ public class TrackSensorsService extends Service {
         if (event.values.length != 0) {
             int type = event.sensor.getType();
 
-            String[] values = new String[event.values.length];
+            String[] values = new String[event.values.length + 2];
 
-            for(int i = 0; i < event.values.length; ++i) {
-                values[i] = Float.toString(event.values[i]);
+            if (mFiles.get(type).length() == 0 && !isHeaderAdded) {
+                String[] headerValues = new String[event.values.length + 2];
+                for(int i = 0; i < event.values.length + 2; ++i) {
+                    if (i == 0) {
+                        headerValues[i] = "timestamp";
+                    } else if (i == event.values.length + 1) {
+                        headerValues[i] = "buttonId";
+                    } else {
+                        headerValues[i] = "value_" + i;
+                    }
+                }
+
+                mWriter.get(type).writeNext(headerValues);
+                isHeaderAdded = true;
+            } else {
+                for(int i = 0; i < event.values.length + 2; ++i) {
+                    if (i == event.values.length + 1) {
+                        values[i] = "Nold";
+                    } else if (i == 0) {
+                        values[i] = String.valueOf(event.timestamp);
+                    } else {
+                        values[i] = Float.toString(event.values[i - 1]);
+                    }
+                }
+
+                mWriter.get(type).writeNext(values, false);
             }
-
-            mWriter.get(type).writeNext(values, false);
         }
+    }
+
+    private String getCurrentTimestamp() {
+        int time = (int) (System.currentTimeMillis());
+        Timestamp tsTemp = new Timestamp(time);
+        String ts =  tsTemp.toString();
+
+        return ts;
     }
 }

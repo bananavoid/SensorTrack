@@ -67,12 +67,6 @@ public class FullSensorsCursorAdapter extends CursorAdapter {
         holder.saveCB = (CheckBox)rootView.findViewById(R.id.saveCheckBox);
 
         holder.name.setText(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-//
-//        holder.plotCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//            }
-//        });
 
         holder.plotCB.setChecked(entry.plotting.equals("true"));
         holder.saveCB.setChecked(entry.saving.equals("true"));
