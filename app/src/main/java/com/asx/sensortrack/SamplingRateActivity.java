@@ -85,8 +85,7 @@ public class SamplingRateActivity extends ActionBarActivity {
         if (mList.getChildCount() > 1 ) {
             saveRates();
 
-            Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
-            startService(intent);
+
 
             Intent nextActivity = new Intent(this, PlotsActivity.class);
             startActivity(nextActivity);

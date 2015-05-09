@@ -1,8 +1,11 @@
 package com.asx.sensortrack;
 
+import android.app.IntentService;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -11,6 +14,8 @@ import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
 import android.os.Environment;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.asx.sensortrack.database.DbUtils;
@@ -37,8 +42,12 @@ public class TrackSensorsService extends Service {
     private HashMap<Integer, Integer> mRates = new HashMap<>();
     private HashMap<Integer, String> mCurrentBtnIds = new HashMap<>();
     private HashMap<Integer, Boolean> mIsHeaderAdded = new HashMap<>();
+    private HashMap<Integer, Boolean> mIsItSaved = new HashMap<>();
+
 
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
+    private static final String ACTION_STRING_ACTIVITY = "ToActivity";
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -49,15 +58,19 @@ public class TrackSensorsService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        List<SensorEntry> sensorsList = DbUtils.getSensorsSaving();
+        List<SensorEntry> sensorsList = DbUtils.getSensorsPlotting();
 
         for (SensorEntry entry : sensorsList) {
-            prepareFile(entry.getName(), entry.getType());
+            if (Boolean.valueOf(entry.getIsSaving())) {
+                prepareFile(entry.getName(), entry.getType());
+            }
+
             mCurrentSensorsTypes.add(entry.getType());
             int entryRate = entry.getRate() == 0 ? SensorManager.SENSOR_DELAY_NORMAL : entry.getRate();
             mRates.put(entry.getType(), entryRate);
             mCurrentBtnIds.put(entry.getType(), "null");
             mIsHeaderAdded.put(entry.getType(), false);
+            mIsItSaved.put(entry.getType(), Boolean.valueOf(entry.getIsSaving()));
         }
 
         Toast.makeText(this, getResources().getString(R.string.service_started), Toast.LENGTH_LONG).show();
@@ -126,6 +139,8 @@ public class TrackSensorsService extends Service {
         @Override
         public void onSensorChanged(SensorEvent event) {
             handleSensorEvent(event);
+
+
 //            Double magnitude = Math.sqrt((Math.pow(Double.parseDouble(axisX), 2)) +
 //                    (Math.pow(Double.parseDouble(axisY), 2)) +
 //                    (Math.pow(Double.parseDouble(axisZ), 2)));
@@ -181,34 +196,42 @@ public class TrackSensorsService extends Service {
 
             String[] values = new String[event.values.length + 2];
 
-            if (mFiles.get(type).length() == 0 && !mIsHeaderAdded.get(type)) {
-                String[] headerValues = new String[event.values.length + 2];
-                for(int i = 0; i < event.values.length + 2; ++i) {
-                    if (i == 0) {
-                        headerValues[i] = "timestamp";
-                    } else if (i == event.values.length + 1) {
-                        headerValues[i] = "buttonId";
-                    } else {
-                        headerValues[i] = "value_" + i;
-                    }
+            for(int i = 0; i < event.values.length + 2; ++i) {
+                if (i == event.values.length + 1) {
+                    String bi = mCurrentBtnIds.get(type);
+                    values[i] = bi;
+                    mCurrentBtnIds.put(type, "null");
+                } else if (i == 0) {
+                    values[i] = String.valueOf(event.timestamp);
+                } else {
+                    values[i] = Float.toString(event.values[i - 1]);
                 }
+            }
 
-                mWriter.get(type).writeNext(headerValues);
-                mIsHeaderAdded.put(type, true);
-            } else {
-                for(int i = 0; i < event.values.length + 2; ++i) {
-                    if (i == event.values.length + 1) {
-                        String bi = mCurrentBtnIds.get(type);
-                        values[i] = bi;
-                        mCurrentBtnIds.put(type, "null");
-                    } else if (i == 0) {
-                        values[i] = String.valueOf(event.timestamp);
-                    } else {
-                        values[i] = Float.toString(event.values[i - 1]);
+            Intent new_intent = new Intent();
+            new_intent.setAction(ACTION_STRING_ACTIVITY);
+            new_intent.putExtra("TYPE", type);
+            new_intent.putExtra("VALUES", values);
+            sendBroadcast(new_intent);
+
+            if(mIsItSaved.get(type)) {
+                if (mFiles.get(type).length() == 0 && !mIsHeaderAdded.get(type)) {
+                    String[] headerValues = new String[event.values.length + 2];
+                    for(int i = 0; i < event.values.length + 2; ++i) {
+                        if (i == 0) {
+                            headerValues[i] = "timestamp";
+                        } else if (i == event.values.length + 1) {
+                            headerValues[i] = "buttonId";
+                        } else {
+                            headerValues[i] = "value_" + i;
+                        }
                     }
-                }
 
-                mWriter.get(type).writeNext(values, false);
+                    mWriter.get(type).writeNext(headerValues);
+                    mIsHeaderAdded.put(type, true);
+                } else {
+                    mWriter.get(type).writeNext(values, false);
+                }
             }
         }
     }

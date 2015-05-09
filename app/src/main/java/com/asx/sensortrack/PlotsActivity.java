@@ -1,9 +1,13 @@
 package com.asx.sensortrack;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,7 +26,9 @@ import com.asx.sensortrack.database.DbUtils;
 import java.util.List;
 
 
-public class PlotsActivity extends ActionBarActivity {
+public class PlotsActivity extends ActionBarActivity{
+    private static final String ACTION_STRING_SERVICE = "ToService";
+    private static final String ACTION_STRING_ACTIVITY = "ToActivity";
 
     public String[] mPads = new String[] {
             "q",
@@ -33,14 +39,38 @@ public class PlotsActivity extends ActionBarActivity {
             "y"
     };
 
+    private BroadcastReceiver activityReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String[] values = intent.getStringArrayExtra("VALUES");
+            int type = 0;
+            Log.d("RECEIVER", "TYPE: " + intent.getIntExtra("TYPE", type));
+            Log.d("RECEIVER", "VALUES: " + values.length);
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(activityReceiver);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plots);
 
-        getSupportActionBar().setTitle("Plotting selected sensors");
+        Intent intent = new Intent(this, TrackSensorsService.class);
+        startService(intent);
 
+        getSupportActionBar().setTitle("Plotting selected sensors");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        if (activityReceiver != null) {
+            IntentFilter intentFilter = new IntentFilter(ACTION_STRING_ACTIVITY);
+            registerReceiver(activityReceiver, intentFilter);
+        }
 
         GridView grid = (GridView) findViewById(R.id.gridPad);
         final ListView list = (ListView) findViewById(R.id.listPlots);
@@ -68,7 +98,7 @@ public class PlotsActivity extends ActionBarActivity {
                 intent.putExtra("INPUT_DATA", mPads[position]);
                 startService(intent);
 
-                for(int i = 0; i< names.length; ++i) {
+                for (int i = 0; i < names.length; ++i) {
                     names[i] = toPlottingEntries.get(i).getName() + "   " + mPads[position];
                 }
 
