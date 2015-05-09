@@ -10,6 +10,7 @@
         android:id="@+id/sensorName"
         android:layout_weight="8"
         android:layout_width="0dp"
+        android:singleLine="false"
         android:layout_height="wrap_content" />
 
     <CheckBox

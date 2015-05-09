@@ -30,13 +30,7 @@ public class PlotsActivity extends ActionBarActivity {
             "e",
             "r",
             "t",
-            "y",
-            "0",
-            "1",
-            "2",
-            "3",
-            "4",
-            "5"
+            "y"
     };
 
     @Override

@@ -8,14 +8,23 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.asx.sensortrack.database.DbUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class SamplingRateActivity extends ActionBarActivity {
-    ListView mList;
+    private LinearLayout mList;
+    private List<SensorEntry> mEntries;
+    private ArrayList<EditText> mEdits = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,16 +34,27 @@ public class SamplingRateActivity extends ActionBarActivity {
         getSupportActionBar().setTitle("Choose sampling rate");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mList = (ListView) findViewById(R.id.sensorsListSampling);
-
         LayoutInflater headerInflater = this.getLayoutInflater();
         View header = headerInflater.inflate(R.layout.sensors_list_rate_header, null);
 
-        mList.addHeaderView(header);
+        mEntries = DbUtils.getSelectedSensors();
 
-        mList.setAdapter(new SelectedSensorsCursorAdapter(
-                this,
-                DbUtils.getSelectedSensorsCursor()));
+        mList = (LinearLayout)findViewById(R.id.scrollView);
+        mList.addView(header);
+
+        for (int i = 0; i < mEntries.size(); ++i) {
+            SensorEntry entry = mEntries.get(i);
+            View item = headerInflater.inflate(R.layout.sensors_list_rate_entry, null);
+            TextView t = (TextView)item.findViewById(R.id.sensorName);
+            EditText e = (EditText)item.findViewById(R.id.rateEdit);
+
+            mEdits.add(e);
+
+            t.setText(entry.getName());
+            e.setText(String.valueOf(entry.getRate()));
+
+            mList.addView(item);
+        }
     }
 
     @Override
@@ -62,7 +82,9 @@ public class SamplingRateActivity extends ActionBarActivity {
     }
 
     public void doNext() {
-        if (mList.getCount() > 1 ) {
+        if (mList.getChildCount() > 1 ) {
+            saveRates();
+
             Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
             startService(intent);
 
@@ -83,5 +105,14 @@ public class SamplingRateActivity extends ActionBarActivity {
         Intent intent = new Intent(this, TrackSensorsService.class);
         stopService(intent);
         finish();
+    }
+
+    private void saveRates(){
+        for (int i = 0; i < mEdits.size(); ++i) {
+            EditText item = mEdits.get(i);
+            int rate = Integer.valueOf(item.getText().toString());
+            mEntries.get(i).setRate(rate);
+            mEntries.get(i).save();
+        }
     }
 }
