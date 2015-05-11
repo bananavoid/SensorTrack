@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="212dp">
+    android:layout_height="wrap_content">
 
-    <com.jjoe64.graphview.helper.GraphViewXML
-        android:id="@+id/graph"
+    <com.jjoe64.graphview.GraphView
         android:layout_width="match_parent"
         android:layout_height="212dip"
-        app:seriesData="0=0"
-        app:seriesType="line"
-        app:seriesColor="#ffcc3417"/>
+        android:id="@+id/graph" />
 
 </LinearLayout>

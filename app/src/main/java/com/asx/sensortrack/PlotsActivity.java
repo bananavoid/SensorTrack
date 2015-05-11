@@ -32,11 +32,14 @@ import java.util.List;
 
 public class PlotsActivity extends ActionBarActivity {
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
+    //private ListView mList;
     private LinearLayout mList;
+
     private PlotsBaseAdapter mAdapter;
     private HashMap<Integer, GraphView> mGraphs = new HashMap<>();
     private HashMap<Integer, LineGraphSeries<DataPoint>> mDataSeries = new HashMap<>();
     private HashMap<Integer, Double> mLastXValue = new HashMap<>();
+    private HashMap<Integer, Integer> mRates = new HashMap<>();
 
 
     public String[] mPads = new String[] {
@@ -53,14 +56,34 @@ public class PlotsActivity extends ActionBarActivity {
 
         @Override
         public void onReceive(Context context, final Intent intent) {
-            updateGraph(intent);
+            //updateGraph(intent);
 
-//            handler.post(new Runnable() {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                    }
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateGraph(intent);
+                        }
+                    });
+                }
+            };
+
+            thread.start();
+
+//            handler.postDelayed(new Runnable() {
 //                @Override
 //                public void run() {
 //                    updateGraph(intent);
+//                    //handler.removeCallbacks(this);
 //                }
-//            });
+//            }, 1000);
         }
     };
 
@@ -71,15 +94,19 @@ public class PlotsActivity extends ActionBarActivity {
         double m = 0d;
         final double magnitude = intent.getDoubleExtra("MAGNITUDE", m);
 
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                //mAdapter.setGraphData(type, magnitude, btnLabel);
-                double lastX = (200 + mLastXValue.get(type));
-                mLastXValue.put(type, lastX);
-                mDataSeries.get(type).appendData(new DataPoint(lastX, magnitude), false, 500);
-            }
-        });
+        double lastX = ((double)mRates.get(type) + mLastXValue.get(type));
+        mLastXValue.put(type, lastX);
+        mDataSeries.get(type).appendData(new DataPoint(lastX, magnitude), false, 10);
+
+//        runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+////                mAdapter.setGraphData(type, magnitude, btnLabel);
+//                double lastX = (200 + mLastXValue.get(type));
+//                mLastXValue.put(type, lastX);
+//                mDataSeries.get(type).appendData(new DataPoint(lastX, magnitude), false, 500);
+//            }
+//        });
     }
 
     @Override
@@ -93,9 +120,6 @@ public class PlotsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plots);
 
-        Intent intent = new Intent(this, TrackSensorsService.class);
-        startService(intent);
-
         getSupportActionBar().setTitle("Plotting selected sensors");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -105,7 +129,7 @@ public class PlotsActivity extends ActionBarActivity {
         }
 
         GridView grid = (GridView) findViewById(R.id.gridPad);
-        //mList = (ListView) findViewById(R.id.listPlots);
+//        mList = (ListView) findViewById(R.id.listPlots);
 
         final List<SensorEntry> toPlottingEntries = DbUtils.getSensorsPlotting();
         mList = (LinearLayout)findViewById(R.id.scrollView);
@@ -124,6 +148,7 @@ public class PlotsActivity extends ActionBarActivity {
             graph.addSeries(dataSeries);
             mDataSeries.put(entry.getType(), dataSeries);
             mLastXValue.put(entry.getType(), 0d);
+            mRates.put(entry.getType(), entry.getRate());
             //graph.addSeries(mButtonDataSeries.get(getItem(position).getType()));
             graph.getViewport().setMinX(0);
             graph.getViewport().setMinY(0);
@@ -151,6 +176,9 @@ public class PlotsActivity extends ActionBarActivity {
                 startService(intent);
             }
         });
+
+        Intent intent = new Intent(this, TrackSensorsService.class);
+        startService(intent);
     }
 
     @Override

@@ -12,6 +12,7 @@ import android.hardware.TriggerEventListener;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.asx.sensortrack.database.DbUtils;
@@ -21,9 +22,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TimeZone;
 
 
 public class TrackSensorsService extends Service {
@@ -36,9 +40,12 @@ public class TrackSensorsService extends Service {
     private HashMap<Integer, String> mCurrentBtnIds = new HashMap<>();
     private HashMap<Integer, Boolean> mIsHeaderAdded = new HashMap<>();
     private HashMap<Integer, Boolean> mIsItSaved = new HashMap<>();
+    private HashMap<Integer, Runnable> mRunnables = new HashMap<>();
+
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
     private final Handler mHandler = new Handler();
+    private boolean isHandled = false;
 
 
     @Override
@@ -63,6 +70,7 @@ public class TrackSensorsService extends Service {
             mCurrentBtnIds.put(entry.getType(), "null");
             mIsHeaderAdded.put(entry.getType(), false);
             mIsItSaved.put(entry.getType(), Boolean.valueOf(entry.getIsSaving()));
+            mRunnables.put(entry.getType(), null);
         }
 
         Toast.makeText(this, getResources().getString(R.string.service_started), Toast.LENGTH_LONG).show();
@@ -122,9 +130,18 @@ public class TrackSensorsService extends Service {
 
     private final SensorEventListener mListener = new SensorEventListener() {
         @Override
-        public void onSensorChanged(SensorEvent event) {
-            handleSensorEvent(event, null);
-
+        public void onSensorChanged(final SensorEvent event) {
+            int type = event.sensor.getType();
+            if (!isHandled) {
+                isHandled = true;
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        handleSensorEvent(event, null);
+                        mHandler.removeCallbacks(this);
+                    }
+                }, mRates.get(type));
+            }
 
 //            Double magnitude = Math.sqrt((Math.pow(Double.parseDouble(axisX), 2)) +
 //                    (Math.pow(Double.parseDouble(axisY), 2)) +
@@ -143,7 +160,7 @@ public class TrackSensorsService extends Service {
         for (Integer type : mCurrentSensorsTypes) {
             Sensor sensor = mSensorManager.getDefaultSensor(type);
             if (type != 17) {
-                mSensorManager.registerListener(mListener, sensor, mRates.get(type));
+                mSensorManager.registerListener(mListener, sensor, 2000);
             } else {
                 mSensorManager.requestTriggerSensor(mTriggerListener, sensor);
             }
@@ -180,6 +197,12 @@ public class TrackSensorsService extends Service {
         int type = 0;
 
         if (event != null) {
+            Timestamp stamp = new Timestamp(System.currentTimeMillis());
+            Date date = new Date(stamp.getTime());
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy h:mm:ss a");
+            sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+            String formattedDate = sdf.format(date);
+            Log.d("SERVICE" , "TIMESTAMP: " + formattedDate);
             if (event.values.length != 0) {
                 type = event.sensor.getType();
                 String[] values = new String[event.values.length + 2];
@@ -223,7 +246,7 @@ public class TrackSensorsService extends Service {
         if (finalValues.length > 0 && type != 0) {
             sendUpdateToUI(type, finalValues);
 
-//            mHandler.post(new MyRunnable(finalValues, type));
+            //mHandler.postDelayed(new MyRunnable(finalValues, type), mRates.get(type));
 
             if(mIsItSaved.get(type)) {
                 if (mFiles.get(type).length() == 0 && !mIsHeaderAdded.get(type)) {
@@ -258,7 +281,9 @@ public class TrackSensorsService extends Service {
         }
 
         public void run() {
+            mHandler.removeCallbacks(this);
             sendUpdateToUI(mType, mValues);
+            //mHandler.postDelayed(this, mRates.get(mType));
         }
     }
 
@@ -286,6 +311,8 @@ public class TrackSensorsService extends Service {
         new_intent.putExtra("BTN_LABEL", buttonLabel);
 
         sendBroadcast(new_intent);
+
+        isHandled = false;
     }
 
     private String getCurrentTimestamp() {
