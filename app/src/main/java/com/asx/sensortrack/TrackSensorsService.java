@@ -40,13 +40,13 @@ public class TrackSensorsService extends Service {
     private HashMap<Integer, String> mCurrentBtnIds = new HashMap<>();
     private HashMap<Integer, Boolean> mIsHeaderAdded = new HashMap<>();
     private HashMap<Integer, Boolean> mIsItSaved = new HashMap<>();
-    private HashMap<Integer, Runnable> mRunnables = new HashMap<>();
+    private HashMap<Integer, Boolean> mIsItHandled = new HashMap<>();
+    private HashMap<Integer, Boolean> mIsItPlotting = new HashMap<>();
+
 
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
     private final Handler mHandler = new Handler();
-    private boolean isHandled = false;
-
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -57,7 +57,7 @@ public class TrackSensorsService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        List<SensorEntry> sensorsList = DbUtils.getSensorsPlotting();
+        List<SensorEntry> sensorsList = DbUtils.getSelectedSensors();
 
         for (SensorEntry entry : sensorsList) {
             if (Boolean.valueOf(entry.getIsSaving())) {
@@ -70,7 +70,8 @@ public class TrackSensorsService extends Service {
             mCurrentBtnIds.put(entry.getType(), "null");
             mIsHeaderAdded.put(entry.getType(), false);
             mIsItSaved.put(entry.getType(), Boolean.valueOf(entry.getIsSaving()));
-            mRunnables.put(entry.getType(), null);
+            mIsItPlotting.put(entry.getType(), Boolean.valueOf(entry.getIsPlotting()));
+            mIsItHandled.put(entry.getType(), false);
         }
 
         Toast.makeText(this, getResources().getString(R.string.service_started), Toast.LENGTH_LONG).show();
@@ -132,8 +133,8 @@ public class TrackSensorsService extends Service {
         @Override
         public void onSensorChanged(final SensorEvent event) {
             int type = event.sensor.getType();
-            if (!isHandled) {
-                isHandled = true;
+            if (!mIsItHandled.get(type)) {
+                mIsItHandled.put(type, true);
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -142,10 +143,6 @@ public class TrackSensorsService extends Service {
                     }
                 }, mRates.get(type));
             }
-
-//            Double magnitude = Math.sqrt((Math.pow(Double.parseDouble(axisX), 2)) +
-//                    (Math.pow(Double.parseDouble(axisY), 2)) +
-//                    (Math.pow(Double.parseDouble(axisZ), 2)));
         }
 
         @Override
@@ -197,12 +194,6 @@ public class TrackSensorsService extends Service {
         int type = 0;
 
         if (event != null) {
-            Timestamp stamp = new Timestamp(System.currentTimeMillis());
-            Date date = new Date(stamp.getTime());
-            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy h:mm:ss a");
-            sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-            String formattedDate = sdf.format(date);
-            Log.d("SERVICE" , "TIMESTAMP: " + formattedDate);
             if (event.values.length != 0) {
                 type = event.sensor.getType();
                 String[] values = new String[event.values.length + 2];
@@ -231,7 +222,7 @@ public class TrackSensorsService extends Service {
                     if (i == triggerEvent.values.length + 1) {
                         String bi = mCurrentBtnIds.get(type);
                         values[i] = bi;
-                        mCurrentBtnIds.put(type, "null");
+                        mCurrentBtnIds.put(type, getResources().getString(R.string.default_btn_label));
                     } else if (i == 0) {
                         values[i] = String.valueOf(triggerEvent.timestamp);
                     } else {
@@ -244,9 +235,9 @@ public class TrackSensorsService extends Service {
         }
 
         if (finalValues.length > 0 && type != 0) {
-            sendUpdateToUI(type, finalValues);
-
-            //mHandler.postDelayed(new MyRunnable(finalValues, type), mRates.get(type));
+            if(mIsItPlotting.get(type)) {
+                sendUpdateToUI(type, finalValues);
+            }
 
             if(mIsItSaved.get(type)) {
                 if (mFiles.get(type).length() == 0 && !mIsHeaderAdded.get(type)) {
@@ -268,23 +259,8 @@ public class TrackSensorsService extends Service {
                 }
             }
         }
-    }
 
-
-    private class MyRunnable implements Runnable {
-        private String[] mValues = new String[]{};
-        private int mType;
-
-        public MyRunnable(String[] values, int type) {
-            this.mValues = values;
-            this.mType = type;
-        }
-
-        public void run() {
-            mHandler.removeCallbacks(this);
-            sendUpdateToUI(mType, mValues);
-            //mHandler.postDelayed(this, mRates.get(mType));
-        }
+        mIsItHandled.put(type, false);
     }
 
     private void sendUpdateToUI(int type, String[] values) {
@@ -311,13 +287,10 @@ public class TrackSensorsService extends Service {
         new_intent.putExtra("BTN_LABEL", buttonLabel);
 
         sendBroadcast(new_intent);
-
-        isHandled = false;
     }
 
     private String getCurrentTimestamp() {
         int time = (int) (System.currentTimeMillis());
-        Timestamp tsTemp = new Timestamp(time);
-        return tsTemp.toString();
+        return String.valueOf(time);
     }
 }

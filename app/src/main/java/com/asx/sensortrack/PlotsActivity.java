@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
@@ -38,6 +39,7 @@ public class PlotsActivity extends ActionBarActivity {
     private PlotsBaseAdapter mAdapter;
     private HashMap<Integer, GraphView> mGraphs = new HashMap<>();
     private HashMap<Integer, LineGraphSeries<DataPoint>> mDataSeries = new HashMap<>();
+    private HashMap<Integer, LineGraphSeries<DataPoint>> mButtonDataSeries = new HashMap<>();
     private HashMap<Integer, Double> mLastXValue = new HashMap<>();
     private HashMap<Integer, Integer> mRates = new HashMap<>();
 
@@ -52,38 +54,10 @@ public class PlotsActivity extends ActionBarActivity {
     };
 
     private BroadcastReceiver activityReceiver = new BroadcastReceiver() {
-        private final Handler handler= new Handler();
 
         @Override
         public void onReceive(Context context, final Intent intent) {
-            //updateGraph(intent);
-
-            Thread thread = new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                    }
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateGraph(intent);
-                        }
-                    });
-                }
-            };
-
-            thread.start();
-
-//            handler.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    updateGraph(intent);
-//                    //handler.removeCallbacks(this);
-//                }
-//            }, 1000);
+            updateGraph(intent);
         }
     };
 
@@ -96,17 +70,14 @@ public class PlotsActivity extends ActionBarActivity {
 
         double lastX = ((double)mRates.get(type) + mLastXValue.get(type));
         mLastXValue.put(type, lastX);
-        mDataSeries.get(type).appendData(new DataPoint(lastX, magnitude), false, 10);
+        mDataSeries.get(type).appendData(new DataPoint(lastX, magnitude), false, 5);
 
-//        runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
-////                mAdapter.setGraphData(type, magnitude, btnLabel);
-//                double lastX = (200 + mLastXValue.get(type));
-//                mLastXValue.put(type, lastX);
-//                mDataSeries.get(type).appendData(new DataPoint(lastX, magnitude), false, 500);
-//            }
-//        });
+//        Log.d("UPDATE_GRAPH", "BTN: " + btnLabel);
+//
+//        if (!btnLabel.equals(getString(R.string.default_btn_label))) {
+//            double y = mDataSeries.get(type).getHighestValueY();
+//            mButtonDataSeries.get(type).appendData(new DataPoint(lastX, y), false, 5);
+//        }
     }
 
     @Override
@@ -120,7 +91,7 @@ public class PlotsActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plots);
 
-        getSupportActionBar().setTitle("Plotting selected sensors");
+        getSupportActionBar().setTitle(getString(R.string.plots_activity_title));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         if (activityReceiver != null) {
@@ -138,22 +109,27 @@ public class PlotsActivity extends ActionBarActivity {
 
         for (int i = 0; i < toPlottingEntries.size(); ++i) {
             SensorEntry entry = toPlottingEntries.get(i);
-            LineGraphSeries<DataPoint> dataSeries = new LineGraphSeries<DataPoint>();
 
+            LineGraphSeries<DataPoint> dataSeries = new LineGraphSeries<DataPoint>();
+            //LineGraphSeries<DataPoint> btnSeries = new LineGraphSeries<DataPoint>();
+
+            dataSeries.setColor(Color.BLUE);
+            //btnSeries.setColor(Color.RED);
 
             View item = inflater.inflate(R.layout.plot_entry, null);
-            //item.setTag(entry.getType(), i);
             GraphView graph = (GraphView)item.findViewById(R.id.graph);
 
             graph.addSeries(dataSeries);
-            mDataSeries.put(entry.getType(), dataSeries);
-            mLastXValue.put(entry.getType(), 0d);
-            mRates.put(entry.getType(), entry.getRate());
-            //graph.addSeries(mButtonDataSeries.get(getItem(position).getType()));
+            //graph.addSeries(btnSeries);
+
+            graph.setTitle(entry.getName());
             graph.getViewport().setMinX(0);
             graph.getViewport().setMinY(0);
 
-            //mGraphs.put(entry.getType(), graph);
+            mDataSeries.put(entry.getType(), dataSeries);
+            //mButtonDataSeries.put(entry.getType(), btnSeries);
+            mLastXValue.put(entry.getType(), 0d);
+            mRates.put(entry.getType(), entry.getRate());
 
             mList.addView(item);
         }
@@ -203,6 +179,7 @@ public class PlotsActivity extends ActionBarActivity {
     public void onBackPressed() {
         super.onBackPressed();
         stopTracking();
+        finish();
     }
 
     public void stopTracking() {

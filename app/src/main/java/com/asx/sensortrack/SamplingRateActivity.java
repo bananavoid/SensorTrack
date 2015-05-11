@@ -1,6 +1,7 @@
 package com.asx.sensortrack;
 
 import android.content.Intent;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -79,14 +80,11 @@ public class SamplingRateActivity extends ActionBarActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        cleanAll();
     }
 
     public void doNext() {
         if (mList.getChildCount() > 1 ) {
             saveRates();
-
-
 
             Intent nextActivity = new Intent(this, PlotsActivity.class);
             startActivity(nextActivity);
@@ -98,12 +96,6 @@ public class SamplingRateActivity extends ActionBarActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        cleanAll();
-    }
-
-    public void cleanAll() {
-        Intent intent = new Intent(this, TrackSensorsService.class);
-        stopService(intent);
         finish();
     }
 
