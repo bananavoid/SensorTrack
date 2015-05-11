@@ -34,8 +34,9 @@ public class SamplingRateActivity extends ActionBarActivity {
         getSupportActionBar().setTitle("Choose sampling rate");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        LayoutInflater headerInflater = this.getLayoutInflater();
-        View header = headerInflater.inflate(R.layout.sensors_list_rate_header, null);
+        LayoutInflater inflater = this.getLayoutInflater();
+
+        View header = inflater.inflate(R.layout.sensors_list_rate_header, null);
 
         mEntries = DbUtils.getSelectedSensors();
 
@@ -44,7 +45,7 @@ public class SamplingRateActivity extends ActionBarActivity {
 
         for (int i = 0; i < mEntries.size(); ++i) {
             SensorEntry entry = mEntries.get(i);
-            View item = headerInflater.inflate(R.layout.sensors_list_rate_entry, null);
+            View item = inflater.inflate(R.layout.sensors_list_rate_entry, null);
             TextView t = (TextView)item.findViewById(R.id.sensorName);
             EditText e = (EditText)item.findViewById(R.id.rateEdit);
 

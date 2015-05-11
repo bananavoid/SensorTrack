@@ -4,7 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v4.content.LocalBroadcastManager;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,22 +14,30 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.asx.sensortrack.database.DbUtils;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.util.HashMap;
 import java.util.List;
 
 
-public class PlotsActivity extends ActionBarActivity{
-    private static final String ACTION_STRING_SERVICE = "ToService";
+public class PlotsActivity extends ActionBarActivity {
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
+    private LinearLayout mList;
+    private PlotsBaseAdapter mAdapter;
+    private HashMap<Integer, GraphView> mGraphs = new HashMap<>();
+    private HashMap<Integer, LineGraphSeries<DataPoint>> mDataSeries = new HashMap<>();
+    private HashMap<Integer, Double> mLastXValue = new HashMap<>();
+
 
     public String[] mPads = new String[] {
             "q",
@@ -40,15 +49,38 @@ public class PlotsActivity extends ActionBarActivity{
     };
 
     private BroadcastReceiver activityReceiver = new BroadcastReceiver() {
+        private final Handler handler= new Handler();
 
         @Override
-        public void onReceive(Context context, Intent intent) {
-            String[] values = intent.getStringArrayExtra("VALUES");
-            int type = 0;
-            Log.d("RECEIVER", "TYPE: " + intent.getIntExtra("TYPE", type));
-            Log.d("RECEIVER", "VALUES: " + values.length);
+        public void onReceive(Context context, final Intent intent) {
+            updateGraph(intent);
+
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    updateGraph(intent);
+//                }
+//            });
         }
     };
+
+    private void updateGraph(Intent intent) {
+        int t = 0;
+        final int type = intent.getIntExtra("TYPE", t);
+        final  String btnLabel = intent.getStringExtra("BTN_LABEL");
+        double m = 0d;
+        final double magnitude = intent.getDoubleExtra("MAGNITUDE", m);
+
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //mAdapter.setGraphData(type, magnitude, btnLabel);
+                double lastX = (200 + mLastXValue.get(type));
+                mLastXValue.put(type, lastX);
+                mDataSeries.get(type).appendData(new DataPoint(lastX, magnitude), false, 500);
+            }
+        });
+    }
 
     @Override
     protected void onDestroy() {
@@ -73,22 +105,42 @@ public class PlotsActivity extends ActionBarActivity{
         }
 
         GridView grid = (GridView) findViewById(R.id.gridPad);
-        final ListView list = (ListView) findViewById(R.id.listPlots);
+        //mList = (ListView) findViewById(R.id.listPlots);
 
         final List<SensorEntry> toPlottingEntries = DbUtils.getSensorsPlotting();
-        final String[] names = new String[toPlottingEntries.size()];
+        mList = (LinearLayout)findViewById(R.id.scrollView);
 
-        for(int i = 0; i< toPlottingEntries.size(); ++i) {
-            names[i] = toPlottingEntries.get(i).getName();
+        LayoutInflater inflater = this.getLayoutInflater();
+
+        for (int i = 0; i < toPlottingEntries.size(); ++i) {
+            SensorEntry entry = toPlottingEntries.get(i);
+            LineGraphSeries<DataPoint> dataSeries = new LineGraphSeries<DataPoint>();
+
+
+            View item = inflater.inflate(R.layout.plot_entry, null);
+            //item.setTag(entry.getType(), i);
+            GraphView graph = (GraphView)item.findViewById(R.id.graph);
+
+            graph.addSeries(dataSeries);
+            mDataSeries.put(entry.getType(), dataSeries);
+            mLastXValue.put(entry.getType(), 0d);
+            //graph.addSeries(mButtonDataSeries.get(getItem(position).getType()));
+            graph.getViewport().setMinX(0);
+            graph.getViewport().setMinY(0);
+
+            //mGraphs.put(entry.getType(), graph);
+
+            mList.addView(item);
         }
 
-        list.setAdapter(new ArrayAdapter<String>(
-                this,
-                R.layout.test,
-                names
-        ));
+//        mAdapter = new PlotsBaseAdapter(
+//                this,
+//                toPlottingEntries
+//        );
+//
+//        mList.setAdapter(mAdapter);
 
-        grid.setAdapter(new CustomGridAdapter());
+        grid.setAdapter(new CustomGridAdapter(this, mPads));
 
         grid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -97,16 +149,6 @@ public class PlotsActivity extends ActionBarActivity{
                 Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
                 intent.putExtra("INPUT_DATA", mPads[position]);
                 startService(intent);
-
-                for (int i = 0; i < names.length; ++i) {
-                    names[i] = toPlottingEntries.get(i).getName() + "   " + mPads[position];
-                }
-
-                list.setAdapter(new ArrayAdapter<String>(
-                        getBaseContext(),
-                        R.layout.test,
-                        names
-                ));
             }
         });
     }
@@ -133,42 +175,6 @@ public class PlotsActivity extends ActionBarActivity{
     public void onBackPressed() {
         super.onBackPressed();
         stopTracking();
-    }
-
-    public class CustomGridAdapter extends BaseAdapter {
-        LayoutInflater inflater;
-
-        public CustomGridAdapter() {
-            inflater = (LayoutInflater) getBaseContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        }
-
-        @Override
-        public final int getCount() {
-            return mPads.length;
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return null;
-        }
-
-        @Override
-        public final long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = inflater.inflate(R.layout.pad_entry, null);
-            }
-
-            Button button = (Button) convertView.findViewById(R.id.padButton);
-            button.setText(mPads[position]);
-            button.setTag(mPads[position]);
-
-            return convertView;
-        }
     }
 
     public void stopTracking() {

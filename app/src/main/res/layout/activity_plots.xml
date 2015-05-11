@@ -6,13 +6,27 @@
     android:orientation="vertical"
     tools:context="com.asx.sensortrack.PlotsActivity">
 
-    <ListView
-        android:id="@+id/listPlots"
+    <!--<ListView-->
+        <!--android:id="@+id/listPlots"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="0dp"-->
+        <!--android:layout_weight="9"-->
+        <!--android:dividerHeight="10dp"-->
+        <!--android:divider="@android:color/transparent"/>-->
+
+    <ScrollView
+
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="9"
-        android:dividerHeight="10dp"
-        android:divider="@android:color/transparent"/>
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"/>
+
+    </ScrollView>
+
 
     <GridView
         android:id="@+id/gridPad"

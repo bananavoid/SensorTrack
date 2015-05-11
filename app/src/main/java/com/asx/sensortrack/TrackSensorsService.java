@@ -1,11 +1,8 @@
 package com.asx.sensortrack;
 
-import android.app.IntentService;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -13,18 +10,14 @@ import android.hardware.SensorManager;
 import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
-import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.asx.sensortrack.database.DbUtils;
 import com.opencsv.CSVWriter;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -43,10 +36,9 @@ public class TrackSensorsService extends Service {
     private HashMap<Integer, String> mCurrentBtnIds = new HashMap<>();
     private HashMap<Integer, Boolean> mIsHeaderAdded = new HashMap<>();
     private HashMap<Integer, Boolean> mIsItSaved = new HashMap<>();
-
-
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
+    private final Handler mHandler = new Handler();
 
 
     @Override
@@ -66,7 +58,7 @@ public class TrackSensorsService extends Service {
             }
 
             mCurrentSensorsTypes.add(entry.getType());
-            int entryRate = entry.getRate() == 0 ? SensorManager.SENSOR_DELAY_NORMAL : entry.getRate();
+            int entryRate = entry.getRate();
             mRates.put(entry.getType(), entryRate);
             mCurrentBtnIds.put(entry.getType(), "null");
             mIsHeaderAdded.put(entry.getType(), false);
@@ -79,7 +71,7 @@ public class TrackSensorsService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (intent.getExtras()!= null) {
+        if (intent.getExtras() != null) {
             String value = intent.getStringExtra("INPUT_DATA");
 
             for (int i = 0; i < mCurrentBtnIds.size() ;++i) {
@@ -93,6 +85,7 @@ public class TrackSensorsService extends Service {
 
         return super.onStartCommand(intent, flags, startId);
     }
+
 
     @Override
     public void onDestroy() {
@@ -123,22 +116,14 @@ public class TrackSensorsService extends Service {
     private final TriggerEventListener mTriggerListener = new TriggerEventListener() {
         @Override
         public void onTrigger(TriggerEvent event) {
-            int type = event.sensor.getType();
-
-            String[] values = new String[event.values.length];
-
-            for(int i = 0; i < event.values.length; ++i) {
-                values[i] = Float.toString(event.values[i]);
-            }
-
-            mWriter.get(type).writeNext(values, false);
+            handleSensorEvent(null, event);
         }
     };
 
     private final SensorEventListener mListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            handleSensorEvent(event);
+            handleSensorEvent(event, null);
 
 
 //            Double magnitude = Math.sqrt((Math.pow(Double.parseDouble(axisX), 2)) +
@@ -190,29 +175,55 @@ public class TrackSensorsService extends Service {
         }
     }
 
-    private void handleSensorEvent(SensorEvent event) {
-        if (event.values.length != 0) {
-            int type = event.sensor.getType();
+    private void handleSensorEvent(SensorEvent event, TriggerEvent triggerEvent) {
+        String[] finalValues = new String[]{};
+        int type = 0;
 
-            String[] values = new String[event.values.length + 2];
+        if (event != null) {
+            if (event.values.length != 0) {
+                type = event.sensor.getType();
+                String[] values = new String[event.values.length + 2];
 
-            for(int i = 0; i < event.values.length + 2; ++i) {
-                if (i == event.values.length + 1) {
-                    String bi = mCurrentBtnIds.get(type);
-                    values[i] = bi;
-                    mCurrentBtnIds.put(type, "null");
-                } else if (i == 0) {
-                    values[i] = String.valueOf(event.timestamp);
-                } else {
-                    values[i] = Float.toString(event.values[i - 1]);
+                for (int i = 0; i < event.values.length + 2; ++i) {
+                    if (i == event.values.length + 1) {
+                        String bi = mCurrentBtnIds.get(type);
+                        values[i] = bi;
+                        mCurrentBtnIds.put(type, "null");
+                    } else if (i == 0) {
+                        values[i] = String.valueOf(event.timestamp);
+                    } else {
+                        values[i] = Float.toString(event.values[i - 1]);
+                    }
                 }
+
+                finalValues = values;
             }
 
-            Intent new_intent = new Intent();
-            new_intent.setAction(ACTION_STRING_ACTIVITY);
-            new_intent.putExtra("TYPE", type);
-            new_intent.putExtra("VALUES", values);
-            sendBroadcast(new_intent);
+        } else if (triggerEvent != null) {
+            if (triggerEvent.values.length != 0) {
+                type = triggerEvent.sensor.getType();
+                String[] values = new String[triggerEvent.values.length + 2];
+
+                for (int i = 0; i < triggerEvent.values.length + 2; ++i) {
+                    if (i == triggerEvent.values.length + 1) {
+                        String bi = mCurrentBtnIds.get(type);
+                        values[i] = bi;
+                        mCurrentBtnIds.put(type, "null");
+                    } else if (i == 0) {
+                        values[i] = String.valueOf(triggerEvent.timestamp);
+                    } else {
+                        values[i] = Float.toString(triggerEvent.values[i - 1]);
+                    }
+                }
+
+                finalValues = values;
+            }
+        }
+
+        if (finalValues.length > 0 && type != 0) {
+            sendUpdateToUI(type, finalValues);
+
+//            mHandler.post(new MyRunnable(finalValues, type));
 
             if(mIsItSaved.get(type)) {
                 if (mFiles.get(type).length() == 0 && !mIsHeaderAdded.get(type)) {
@@ -230,17 +241,56 @@ public class TrackSensorsService extends Service {
                     mWriter.get(type).writeNext(headerValues);
                     mIsHeaderAdded.put(type, true);
                 } else {
-                    mWriter.get(type).writeNext(values, false);
+                    mWriter.get(type).writeNext(finalValues, false);
                 }
             }
         }
     }
 
+
+    private class MyRunnable implements Runnable {
+        private String[] mValues = new String[]{};
+        private int mType;
+
+        public MyRunnable(String[] values, int type) {
+            this.mValues = values;
+            this.mType = type;
+        }
+
+        public void run() {
+            sendUpdateToUI(mType, mValues);
+        }
+    }
+
+    private void sendUpdateToUI(int type, String[] values) {
+        double magnitude;
+        String buttonLabel = "";
+
+        double squaresSumm = 0;
+
+        for (int i = 1; i < values.length; ++i) {
+            int lastValue = values.length - 1;
+            if (i == lastValue) {
+                buttonLabel = values[lastValue];
+            } else {
+                squaresSumm = +Math.pow(Double.parseDouble(values[i]), 2);
+            }
+        }
+
+        magnitude = Math.sqrt(squaresSumm);
+
+        Intent new_intent = new Intent();
+        new_intent.setAction(ACTION_STRING_ACTIVITY);
+        new_intent.putExtra("TYPE", type);
+        new_intent.putExtra("MAGNITUDE", magnitude);
+        new_intent.putExtra("BTN_LABEL", buttonLabel);
+
+        sendBroadcast(new_intent);
+    }
+
     private String getCurrentTimestamp() {
         int time = (int) (System.currentTimeMillis());
         Timestamp tsTemp = new Timestamp(time);
-        String ts =  tsTemp.toString();
-
-        return ts;
+        return tsTemp.toString();
     }
 }

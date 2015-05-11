@@ -42,9 +42,6 @@
             android:name=".TrackSensorsService"
             android:enabled="true" />
 
-        <receiver android:name=".SensorValuesReceiver"
-            android:enabled="true"/>
-
         <meta-data
             android:name="DATABASE"
             android:value="sensors_data.db" />
