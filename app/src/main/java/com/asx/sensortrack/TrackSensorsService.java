@@ -43,7 +43,6 @@ public class TrackSensorsService extends Service {
     private HashMap<Integer, Boolean> mIsItHandled = new HashMap<>();
     private HashMap<Integer, Boolean> mIsItPlotting = new HashMap<>();
 
-
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
     private final Handler mHandler = new Handler();
@@ -167,12 +166,16 @@ public class TrackSensorsService extends Service {
     public void prepareFile(String name, int type) {
         File fileDir = (Environment.getExternalStorageDirectory());
 
-        File templatesDirectory= new File(fileDir + "/SensorsData");
-        if (!templatesDirectory.exists()) {
-            templatesDirectory.mkdirs();
+//        File fileDir = new File(Environment.getExternalStoragePublicDirectory(
+//                Environment.DIRECTORY_PICTURES), "SensorsData");
+
+
+        File savingDirectory= new File(fileDir + "/SensorsData");
+        if (!savingDirectory.exists()) {
+            savingDirectory.mkdirs();
         }
 
-        File file = new File(templatesDirectory, name + getCurrentTimestamp() + ".csv");
+        File file = new File(savingDirectory, name + getCurrentTimestamp() + ".csv");
         mFiles.put(type, file);
 
         try {
@@ -241,11 +244,11 @@ public class TrackSensorsService extends Service {
 
             if(mIsItSaved.get(type)) {
                 if (mFiles.get(type).length() == 0 && !mIsHeaderAdded.get(type)) {
-                    String[] headerValues = new String[event.values.length + 2];
-                    for(int i = 0; i < event.values.length + 2; ++i) {
+                    String[] headerValues = new String[finalValues.length];
+                    for(int i = 0; i < finalValues.length; ++i) {
                         if (i == 0) {
                             headerValues[i] = "timestamp";
-                        } else if (i == event.values.length + 1) {
+                        } else if (i == finalValues.length - 1) {
                             headerValues[i] = "buttonId";
                         } else {
                             headerValues[i] = "value_" + i;
