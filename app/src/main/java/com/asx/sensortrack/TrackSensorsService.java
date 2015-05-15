@@ -194,6 +194,8 @@ public class TrackSensorsService extends Service {
 
     private void handleSensorEvent(SensorEvent event, TriggerEvent triggerEvent) {
         String[] finalValues = new String[]{};
+        float[] cleanValues = new float[]{};
+
         int type = 0;
 
         if (event != null) {
@@ -214,6 +216,7 @@ public class TrackSensorsService extends Service {
                 }
 
                 finalValues = values;
+                cleanValues = event.values;
             }
 
         } else if (triggerEvent != null) {
@@ -234,12 +237,13 @@ public class TrackSensorsService extends Service {
                 }
 
                 finalValues = values;
+                cleanValues = event.values;
             }
         }
 
         if (finalValues.length > 0 && type != 0) {
             if(mIsItPlotting.get(type)) {
-                sendUpdateToUI(type, finalValues);
+                sendUpdateToUI(type, cleanValues);
             }
 
             if(mIsItSaved.get(type)) {
@@ -251,7 +255,24 @@ public class TrackSensorsService extends Service {
                         } else if (i == finalValues.length - 1) {
                             headerValues[i] = "buttonId";
                         } else {
-                            headerValues[i] = "value_" + i;
+                            if (type == Sensor.TYPE_ACCELEROMETER || type == Sensor.TYPE_MAGNETIC_FIELD) {
+                                switch (i) {
+                                    case 1:
+                                        headerValues[i] = "axisX";
+                                        break;
+                                    case 2:
+                                        headerValues[i] = "axisY";
+                                        break;
+                                    case 3:
+                                        headerValues[i] = "axisZ";
+                                        break;
+                                    default:
+                                        headerValues[i] = "value_" + i;
+                                        break;
+                                }
+                            } else {
+                                headerValues[i] = "value_" + i;
+                            }
                         }
                     }
 
@@ -266,28 +287,27 @@ public class TrackSensorsService extends Service {
         mIsItHandled.put(type, false);
     }
 
-    private void sendUpdateToUI(int type, String[] values) {
-        double magnitude;
-        String buttonLabel = "";
-
-        double squaresSumm = 0;
-
-        for (int i = 1; i < values.length; ++i) {
-            int lastValue = values.length - 1;
-            if (i == lastValue) {
-                buttonLabel = values[lastValue];
-            } else {
-                squaresSumm = +Math.pow(Double.parseDouble(values[i]), 2);
-            }
-        }
-
-        magnitude = Math.sqrt(squaresSumm);
+    private void sendUpdateToUI(int type, float[] values) {
+//        double magnitude;
+//        String buttonLabel = "";
+//
+//        double squaresSumm = 0;
+//
+//        for (int i = 1; i < values.length; ++i) {
+//            int lastValue = values.length - 1;
+//            if (i == lastValue) {
+//                buttonLabel = values[lastValue];
+//            } else {
+//                squaresSumm = +Math.pow(Double.parseDouble(values[i]), 2);
+//            }
+//        }
+//
+//        magnitude = Math.sqrt(squaresSumm);
 
         Intent new_intent = new Intent();
         new_intent.setAction(ACTION_STRING_ACTIVITY);
         new_intent.putExtra("TYPE", type);
-        new_intent.putExtra("MAGNITUDE", magnitude);
-        new_intent.putExtra("BTN_LABEL", buttonLabel);
+        new_intent.putExtra("VALUES", values);
 
         sendBroadcast(new_intent);
     }

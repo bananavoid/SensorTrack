@@ -49,15 +49,16 @@ import java.util.Set;
 
 public class PlotsActivity extends ActionBarActivity {
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
-    //private ListView mList;
     private LinearLayout mList;
 
-    private HashMap<Integer, Double> mLastXValue = new HashMap<>();
+    private HashMap<Integer, Float> mLastXValue = new HashMap<>();
     private HashMap<Integer, Integer> mRates = new HashMap<>();
     private String mCurrentButtonLabel;
 
     private HashMap<Integer, XYPlot> mGraphs = new HashMap<>();
     private static final int HISTORY_SENSOR_SIZE = 5;
+    private static final int DOMAIN_STEP = 50;
+
 
 
     public String[] mPads = new String[] {
@@ -81,38 +82,36 @@ public class PlotsActivity extends ActionBarActivity {
     private void updateGraph(Intent intent) {
         int t = 0;
         final int type = intent.getIntExtra("TYPE", t);
-        //final String btnLabel = intent.getStringExtra("BTN_LABEL");
-        double m = 0d;
-        final double magnitude = intent.getDoubleExtra("MAGNITUDE", m);
 
-        final double lastX = ((double) mRates.get(type) + mLastXValue.get(type));
+        final float lastX = ((float) mRates.get(type) + mLastXValue.get(type));
         mLastXValue.put(type, lastX);
 
+        float[] values = intent.getFloatArrayExtra("VALUES");
         Object[] seriesSet = mGraphs.get(type).getSeriesSet().toArray();
-        SimpleXYSeries series = (SimpleXYSeries)seriesSet[0];
 
-        if (series.size() > HISTORY_SENSOR_SIZE) {
-            series.removeFirst();
+        if (values.length > 0) {
+            for (int i = 0; i < values.length; ++i) {
+                SimpleXYSeries series = (SimpleXYSeries)seriesSet[i];
+                if (series.size() > HISTORY_SENSOR_SIZE) {
+                    series.removeFirst();
+                }
+
+                series.addLast(lastX, values[i]);
+            }
         }
 
-        series.addLast(lastX, magnitude);
 
         if (!mCurrentButtonLabel.equals(getString(R.string.default_btn_label))) {
             XValueMarker xValMarker;
             xValMarker = new XValueMarker(lastX, mCurrentButtonLabel.toUpperCase());
             xValMarker.getTextPaint().setColor(Color.RED);
-
             YPositionMetric yPos = new YPositionMetric(100.0f, YLayoutStyle.ABSOLUTE_FROM_BOTTOM);
-
             xValMarker.setTextPosition(yPos);
 
             Collection<XYPlot> graphs = mGraphs.values();
             for (XYPlot plot : graphs) {
                 plot.addMarker(xValMarker);
-                //plot.redraw();
             }
-
-            //mGraphs.get(type).addMarker(xValMarker);
 
             mCurrentButtonLabel = getString(R.string.default_btn_label);
         }
@@ -120,12 +119,6 @@ public class PlotsActivity extends ActionBarActivity {
         mGraphs.get(type).redraw();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopTracking();
-        unregisterReceiver(activityReceiver);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,7 +136,6 @@ public class PlotsActivity extends ActionBarActivity {
         }
 
         GridView grid = (GridView) findViewById(R.id.gridPad);
-//        mList = (ListView) findViewById(R.id.listPlots);
 
         final List<SensorEntry> toPlottingEntries = DbUtils.getSensorsPlotting();
         mList = (LinearLayout)findViewById(R.id.scrollView);
@@ -155,23 +147,41 @@ public class PlotsActivity extends ActionBarActivity {
 
                 View item = inflater.inflate(R.layout.plot_entry, null);
                 XYPlot graph = (XYPlot)item.findViewById(R.id.graph);
-                SimpleXYSeries xySeries = new SimpleXYSeries("Sensor data");
+
+                SimpleXYSeries xSeries = new SimpleXYSeries("AxisX");
+                SimpleXYSeries ySeries = new SimpleXYSeries("AxisY");
+                SimpleXYSeries zSeries = new SimpleXYSeries("AxisZ");
+
 
                 LineAndPointFormatter formatter1 = new LineAndPointFormatter(
                         Color.GREEN, null, null, null);
                 formatter1.getLinePaint().setStrokeJoin(Paint.Join.ROUND);
-                formatter1.getLinePaint().setStrokeWidth(5);
+                formatter1.getLinePaint().setStrokeWidth(3);
+
+                LineAndPointFormatter formatter2 = new LineAndPointFormatter(
+                        Color.CYAN, null, null, null);
+                formatter1.getLinePaint().setStrokeJoin(Paint.Join.ROUND);
+                formatter1.getLinePaint().setStrokeWidth(3);
+
+                LineAndPointFormatter formatter3 = new LineAndPointFormatter(
+                        Color.YELLOW, null, null, null);
+                formatter1.getLinePaint().setStrokeJoin(Paint.Join.ROUND);
+                formatter1.getLinePaint().setStrokeWidth(3);
 
 
-                graph.addSeries(xySeries,
+                graph.addSeries(xSeries,
                         formatter1);
 
-//                graph.addSeries(btnLevelSeries,
-//                        new BarFormatter(Color.argb(100, 0, 200, 0), Color.rgb(0, 80, 0)));
+                graph.addSeries(ySeries,
+                        formatter2);
 
-                //graph.setDomainStepValue(entry.getRate());
-                //graph.setTicksPerRangeLabel(3);
-                //graph.setRangeBoundaries(-180, 359, BoundaryMode.FIXED);
+                graph.addSeries(zSeries,
+                        formatter3);
+
+                graph.setTitle(entry.getName());
+
+                graph.setDomainStepValue(DOMAIN_STEP);
+                graph.getGraphWidget().getDomainLabelPaint().setColor(Color.TRANSPARENT);
 
                 graph.setDomainLabel("Time");
                 graph.getDomainLabelWidget().pack();
@@ -179,19 +189,13 @@ public class PlotsActivity extends ActionBarActivity {
                 graph.getRangeLabelWidget().pack();
                 graph.setGridPadding(20, 0, 20, 0);
 
-                mLastXValue.put(entry.getType(), 0d);
+                mLastXValue.put(entry.getType(), 0f);
                 mRates.put(entry.getType(), entry.getRate());
                 mGraphs.put(entry.getType(), graph);
 
                 mList.addView(item);
         }
 
-//        mAdapter = new PlotsBaseAdapter(
-//                this,
-//                toPlottingEntries
-//        );
-//
-//        mList.setAdapter(mAdapter);
 
         grid.setAdapter(new CustomGridAdapter(this, mPads));
 
@@ -224,15 +228,28 @@ public class PlotsActivity extends ActionBarActivity {
             case R.id.action_stop:
                 stopTracking();
                 return true;
+            case R.id.action_close:
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.putExtra("EXIT", true);
+                startActivity(intent);
+                finish();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopTracking();
+        unregisterReceiver(activityReceiver);
+    }
+
+    @Override
     public void onBackPressed() {
         super.onBackPressed();
-        stopTracking();
         finish();
     }
 
