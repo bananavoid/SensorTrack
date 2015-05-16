@@ -2,10 +2,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.asx.sensortrack.MainActivity">
-    <item android:id="@+id/action_stop"
-        android:title="@string/stop_tracking"
+    <item android:id="@+id/action_pause_play"
+        android:title="@string/pause_run_service"
         app:showAsAction="always"
-        android:icon="@drawable/ic_stop_white_48dp"/>
+        android:icon="@drawable/ic_pause_white_48dp"/>
     <item android:id="@+id/action_close"
         android:title="@string/close_app"
         app:showAsAction="always"

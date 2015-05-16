@@ -19,4 +19,5 @@
     <string name="default_btn_label">null</string>
     <string name="plots_activity_title">Plotting selected sensors</string>
     <string name="close_app">Close application</string>
+    <string name="pause_run_service">Pause/Run service</string>
 </resources>

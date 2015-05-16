@@ -54,12 +54,11 @@ public class PlotsActivity extends ActionBarActivity {
     private HashMap<Integer, Float> mLastXValue = new HashMap<>();
     private HashMap<Integer, Integer> mRates = new HashMap<>();
     private String mCurrentButtonLabel;
+    private boolean mServiceRunning = false;
 
     private HashMap<Integer, XYPlot> mGraphs = new HashMap<>();
     private static final int HISTORY_SENSOR_SIZE = 5;
     private static final int DOMAIN_STEP = 50;
-
-
 
     public String[] mPads = new String[] {
             "q",
@@ -204,15 +203,16 @@ public class PlotsActivity extends ActionBarActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position,
                                     long id) {
 
-                mCurrentButtonLabel = mPads[position];
-                Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
-                intent.putExtra("INPUT_DATA", mPads[position]);
-                startService(intent);
+                if (mServiceRunning) {
+                    mCurrentButtonLabel = mPads[position];
+                    Intent intent = new Intent(getApplicationContext(), TrackSensorsService.class);
+                    intent.putExtra("INPUT_DATA", mPads[position]);
+                    startService(intent);
+                }
             }
         });
 
-        Intent intent = new Intent(this, TrackSensorsService.class);
-        startService(intent);
+        startTracking();
     }
 
     @Override
@@ -225,8 +225,14 @@ public class PlotsActivity extends ActionBarActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_stop:
-                stopTracking();
+            case R.id.action_pause_play:
+                if (mServiceRunning) {
+                    stopTracking();
+                    item.setIcon(R.drawable.ic_play_arrow_white_48dp);
+                } else {
+                    startTracking();
+                    item.setIcon(R.drawable.ic_pause_white_48dp);
+                }
                 return true;
             case R.id.action_close:
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
@@ -256,5 +262,12 @@ public class PlotsActivity extends ActionBarActivity {
     public void stopTracking() {
         Intent intent = new Intent(this, TrackSensorsService.class);
         stopService(intent);
+        mServiceRunning = false;
+    }
+
+    public void startTracking() {
+        Intent intent = new Intent(this, TrackSensorsService.class);
+        startService(intent);
+        mServiceRunning = true;
     }
 }
