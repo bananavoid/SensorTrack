@@ -26,7 +26,6 @@ public class SensorTrackApp extends SugarApp {
             entry.save();
 
             long new_count = SensorEntry.count(SensorEntry.class, null, null);
-            Log.d("DB_COUNT", "Real count: " + new_count);
         }
     }
 }
