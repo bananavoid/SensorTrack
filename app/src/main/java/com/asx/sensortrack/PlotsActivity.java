@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -51,16 +52,20 @@ import java.util.Set;
 
 public class PlotsActivity extends ActionBarActivity {
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
-    private LinearLayout mList;
+    private static final int PLOT_HISTORY_SENSOR_SIZE = 50;
+    private static final int PLOT_DOMAIN_STEP = 50;
+    private static final int PLOT_STROKE_SIZE = 3;
+    private static final int PLOT_BOLD_TEXT_SIZE = 24;
+    private static final int PLOT_RANGE_TEXT_SIZE = 20;
 
     private HashMap<Integer, Float> mLastXValue = new HashMap<>();
     private HashMap<Integer, Integer> mRates = new HashMap<>();
+    private HashMap<Integer, XYPlot> mGraphs = new HashMap<>();
+
     private String mCurrentButtonLabel;
     private boolean mServiceRunning = false;
+    private LinearLayout mList;
 
-    private HashMap<Integer, XYPlot> mGraphs = new HashMap<>();
-    private static final int HISTORY_SENSOR_SIZE = 50;
-    private static final int DOMAIN_STEP = 50;
 
     public String[] mPads = new String[] {
             "q",
@@ -91,9 +96,14 @@ public class PlotsActivity extends ActionBarActivity {
         Object[] seriesSet = mGraphs.get(type).getSeriesSet().toArray();
 
         if (values.length > 0) {
-            for (int i = 0; i < values.length; ++i) {
+            int length = values.length;
+            if (values.length > 3) {
+                int diff = values.length - 3;
+                length = values.length - diff;
+            }
+            for (int i = 0; i < length; ++i) {
                 SimpleXYSeries series = (SimpleXYSeries)seriesSet[i];
-                if (series.size() > HISTORY_SENSOR_SIZE) {
+                if (series.size() > PLOT_HISTORY_SENSOR_SIZE) {
                     series.removeFirst();
                 }
 
@@ -106,6 +116,8 @@ public class PlotsActivity extends ActionBarActivity {
             XValueMarker xValMarker;
             xValMarker = new XValueMarker(lastX, mCurrentButtonLabel.toUpperCase());
             xValMarker.getTextPaint().setColor(Color.RED);
+            xValMarker.getTextPaint().setTextSize(PLOT_BOLD_TEXT_SIZE);
+            xValMarker.getTextPaint().setFakeBoldText(true);
             YPositionMetric yPos = new YPositionMetric(100.0f, YLayoutStyle.ABSOLUTE_FROM_BOTTOM);
             xValMarker.setTextPosition(yPos);
 
@@ -153,21 +165,20 @@ public class PlotsActivity extends ActionBarActivity {
                 SimpleXYSeries ySeries = new SimpleXYSeries("AxisY");
                 SimpleXYSeries zSeries = new SimpleXYSeries("AxisZ");
 
-
                 LineAndPointFormatter formatter1 = new LineAndPointFormatter(
                         Color.GREEN, null, null, null);
                 formatter1.getLinePaint().setStrokeJoin(Paint.Join.ROUND);
-                formatter1.getLinePaint().setStrokeWidth(3);
+                formatter1.getLinePaint().setStrokeWidth(PLOT_STROKE_SIZE);
 
                 LineAndPointFormatter formatter2 = new LineAndPointFormatter(
                         Color.CYAN, null, null, null);
                 formatter1.getLinePaint().setStrokeJoin(Paint.Join.ROUND);
-                formatter1.getLinePaint().setStrokeWidth(3);
+                formatter1.getLinePaint().setStrokeWidth(PLOT_STROKE_SIZE);
 
                 LineAndPointFormatter formatter3 = new LineAndPointFormatter(
                         Color.YELLOW, null, null, null);
                 formatter1.getLinePaint().setStrokeJoin(Paint.Join.ROUND);
-                formatter1.getLinePaint().setStrokeWidth(3);
+                formatter1.getLinePaint().setStrokeWidth(PLOT_STROKE_SIZE);
 
 
                 graph.addSeries(xSeries,
@@ -181,16 +192,16 @@ public class PlotsActivity extends ActionBarActivity {
 
                 graph.setTitle(entry.getName());
 
-                graph.setDomainStepValue(DOMAIN_STEP);
+                graph.setDomainStepValue(PLOT_DOMAIN_STEP);
 
                 graph.getGraphWidget().getDomainLabelPaint().setColor(Color.TRANSPARENT);
-                graph.getGraphWidget().getRangeLabelPaint().setTextSize(20);
+                graph.getGraphWidget().getRangeLabelPaint().setTextSize(PLOT_RANGE_TEXT_SIZE);
 
                 graph.getGraphWidget().setSize(new SizeMetrics(
                         0.9f, SizeLayoutType.RELATIVE,
                         0.98f, SizeLayoutType.RELATIVE));
 
-                graph.getTitleWidget().getLabelPaint().setTextSize(24);
+                graph.getTitleWidget().getLabelPaint().setTextSize(PLOT_BOLD_TEXT_SIZE);
                 graph.getTitleWidget().getLabelPaint().setFakeBoldText(true);
                 graph.getTitleWidget().setSize(new SizeMetrics(
                         0.1f, SizeLayoutType.RELATIVE,
@@ -198,9 +209,11 @@ public class PlotsActivity extends ActionBarActivity {
 
                 graph.setDomainLabel("Time");
                 graph.getDomainLabelWidget().pack();
-                graph.setRangeLabel("Magnitude");
                 graph.getRangeLabelWidget().pack();
-                graph.setGridPadding(0, 0, 0, 0);
+
+                graph.getLegendWidget().getTextPaint().setTextSize(PLOT_BOLD_TEXT_SIZE);
+                graph.getLegendWidget().getTextPaint().setFakeBoldText(true);
+                graph.getLegendWidget().setPadding(0,0,0,8);
 
                 mLastXValue.put(entry.getType(), 0f);
                 mRates.put(entry.getType(), entry.getRate());

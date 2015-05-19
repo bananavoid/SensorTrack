@@ -7,7 +7,6 @@ import com.orm.SugarRecord;
  * Model for sensor
  */
 public class SensorEntry extends SugarRecord<SensorEntry> {
-    private int DEFAULT_RATE = 1000;
     String name;
     int type;
     int rate;
@@ -23,7 +22,7 @@ public class SensorEntry extends SugarRecord<SensorEntry> {
         setType(type);
         setIsPlotting("false");
         setIsSaving("false");
-        setRate(DEFAULT_RATE);
+        setRate(1000);
     }
 
     public int getRate() {
