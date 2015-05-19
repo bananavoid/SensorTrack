@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +39,7 @@ public class TrackSensorsService extends Service {
     private HashMap<Integer, CSVWriter> mWriter = new HashMap<>();
     private HashMap<Integer, File> mFiles = new HashMap<>();
     private HashMap<Integer, Integer> mRates = new HashMap<>();
-    private HashMap<Integer, String> mCurrentBtnIds = new HashMap<>();
+    //private HashMap<Integer, String> mCurrentBtnIds = new HashMap<>();
     private HashMap<Integer, Boolean> mIsHeaderAdded = new HashMap<>();
     private HashMap<Integer, Boolean> mIsItSaved = new HashMap<>();
     private HashMap<Integer, Boolean> mIsItHandled = new HashMap<>();
@@ -46,6 +48,8 @@ public class TrackSensorsService extends Service {
     private ArrayList<Integer> mCurrentSensorsTypes = new ArrayList<Integer>();
     private static final String ACTION_STRING_ACTIVITY = "ToActivity";
     private final Handler mHandler = new Handler();
+
+    private String mCurrentBtnId = "null";
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -66,7 +70,7 @@ public class TrackSensorsService extends Service {
             mCurrentSensorsTypes.add(entry.getType());
             int entryRate = entry.getRate();
             mRates.put(entry.getType(), entryRate);
-            mCurrentBtnIds.put(entry.getType(), "null");
+            //mCurrentBtnIds.put(entry.getType(), );
             mIsHeaderAdded.put(entry.getType(), false);
             mIsItSaved.put(entry.getType(), Boolean.valueOf(entry.getIsSaving()));
             mIsItPlotting.put(entry.getType(), Boolean.valueOf(entry.getIsPlotting()));
@@ -81,10 +85,11 @@ public class TrackSensorsService extends Service {
 
         if (intent.getExtras() != null) {
             String value = intent.getStringExtra("INPUT_DATA");
+            mCurrentBtnId = value;
 
-            for (int i = 0; i < mCurrentBtnIds.size() ;++i) {
-                mCurrentBtnIds.put(mCurrentSensorsTypes.get(i), value);
-            }
+//            for (int i = 0; i < mCurrentBtnIds.size() ;++i) {
+//                mCurrentBtnIds.put(mCurrentSensorsTypes.get(i), value);
+//            }
         }
 
         if (mSensorManager == null) {
@@ -205,9 +210,9 @@ public class TrackSensorsService extends Service {
 
                 for (int i = 0; i < event.values.length + 2; ++i) {
                     if (i == event.values.length + 1) {
-                        String bi = mCurrentBtnIds.get(type);
-                        values[i] = bi;
-                        mCurrentBtnIds.put(type, "null");
+                        //String bi = mCurrentBtnIds.get(type);
+                        values[i] = mCurrentBtnId;
+                        //mCurrentBtnIds.put(type, "null");
                     } else if (i == 0) {
                         values[i] = String.valueOf(event.timestamp);
                     } else {
@@ -226,9 +231,9 @@ public class TrackSensorsService extends Service {
 
                 for (int i = 0; i < triggerEvent.values.length + 2; ++i) {
                     if (i == triggerEvent.values.length + 1) {
-                        String bi = mCurrentBtnIds.get(type);
-                        values[i] = bi;
-                        mCurrentBtnIds.put(type, getResources().getString(R.string.default_btn_label));
+                        //String bi = mCurrentBtnIds.get(type);
+                        values[i] = mCurrentBtnId;
+                        //mCurrentBtnIds.put(type, getResources().getString(R.string.default_btn_label));
                     } else if (i == 0) {
                         values[i] = String.valueOf(triggerEvent.timestamp);
                     } else {
@@ -237,7 +242,7 @@ public class TrackSensorsService extends Service {
                 }
 
                 finalValues = values;
-                cleanValues = event.values;
+                cleanValues = triggerEvent.values;
             }
         }
 

@@ -19,6 +19,8 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 
+import com.androidplot.ui.SizeLayoutType;
+import com.androidplot.ui.SizeMetrics;
 import com.androidplot.ui.YLayoutStyle;
 import com.androidplot.ui.YPositionMetric;
 import com.androidplot.xy.BarFormatter;
@@ -57,7 +59,7 @@ public class PlotsActivity extends ActionBarActivity {
     private boolean mServiceRunning = false;
 
     private HashMap<Integer, XYPlot> mGraphs = new HashMap<>();
-    private static final int HISTORY_SENSOR_SIZE = 5;
+    private static final int HISTORY_SENSOR_SIZE = 50;
     private static final int DOMAIN_STEP = 50;
 
     public String[] mPads = new String[] {
@@ -180,13 +182,25 @@ public class PlotsActivity extends ActionBarActivity {
                 graph.setTitle(entry.getName());
 
                 graph.setDomainStepValue(DOMAIN_STEP);
+
                 graph.getGraphWidget().getDomainLabelPaint().setColor(Color.TRANSPARENT);
+                graph.getGraphWidget().getRangeLabelPaint().setTextSize(20);
+
+                graph.getGraphWidget().setSize(new SizeMetrics(
+                        0.9f, SizeLayoutType.RELATIVE,
+                        0.98f, SizeLayoutType.RELATIVE));
+
+                graph.getTitleWidget().getLabelPaint().setTextSize(24);
+                graph.getTitleWidget().getLabelPaint().setFakeBoldText(true);
+                graph.getTitleWidget().setSize(new SizeMetrics(
+                        0.1f, SizeLayoutType.RELATIVE,
+                        1.0f, SizeLayoutType.RELATIVE));
 
                 graph.setDomainLabel("Time");
                 graph.getDomainLabelWidget().pack();
                 graph.setRangeLabel("Magnitude");
                 graph.getRangeLabelWidget().pack();
-                graph.setGridPadding(20, 0, 20, 0);
+                graph.setGridPadding(0, 0, 0, 0);
 
                 mLastXValue.put(entry.getType(), 0f);
                 mRates.put(entry.getType(), entry.getRate());
